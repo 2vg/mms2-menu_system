@@ -169,3 +169,30 @@ MENU_DLL_EXPORT IMenuItemPosition_t Menu_GetCurrentPosition(IMenu_t *pMenu, CPla
 {
 	return pMenu->GetCurrentPosition(aSlot);
 }
+MENU_DLL_EXPORT IMenu_t *Menu_GetPlayerActiveMenu(IMenuSystem_t *pSystem, CPlayerSlot aSlot)
+{
+	if (!pSystem)
+	{
+		return nullptr;
+	}
+
+	auto *pPlayer = pSystem->GetPlayer(aSlot);
+	if (!pPlayer)
+	{
+		return nullptr;
+	}
+
+	auto iActiveMenu = pPlayer->GetActiveMenuIndex();
+	if (iActiveMenu < 0)
+	{
+		return nullptr;
+	}
+
+	auto &vecMenus = pPlayer->GetMenus();
+	if (iActiveMenu >= vecMenus.Count())
+	{
+		return nullptr;
+	}
+
+	return vecMenus[iActiveMenu].m_pInstance;
+}
