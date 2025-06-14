@@ -3086,12 +3086,6 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 			{
 				pszArg1++; // Skip a command character.
 
-				// Print a chat message before.
-				if(!bIsSilent && g_pCVar)
-				{
-					SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
-				}
-
 				// Call the handler.
 				{
 					size_t nArg1Length = 0;
@@ -3113,8 +3107,8 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 
 					if(CLogger::IsChannelEnabled(LV_DETAILED))
 					{
-						const auto &aConcat = g_aEmbedConcat, 
-						           &aConcat2 = g_aEmbed2Concat, 
+						const auto &aConcat = g_aEmbedConcat,
+						           &aConcat2 = g_aEmbed2Concat,
 						           &aConcat3 = g_aEmbed3Concat;
 
 						CBufferStringN<1024> sBuffer;
@@ -3136,13 +3130,14 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 
 					if(Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs))
 					{
+						// Print a chat message before.
+						if(!bIsSilent && g_pCVar)
+						{
+							SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
+						}
+
 						RETURN_META(MRES_SUPERCEDE);
 					}
-				}
-
-				if(bIsSilent)
-				{
-					SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
 				}
 			}
 		}
