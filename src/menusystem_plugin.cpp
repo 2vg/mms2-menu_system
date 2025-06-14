@@ -3131,7 +3131,7 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 					CLogger::DetailedFormat("Command string: %s", aArgs.GetCommandString());
 					CLogger::DetailedFormat("Arg 0: %s", aArgs.Arg(0));
 					CLogger::DetailedFormat("Arg 1: %s", aArgs.Arg(1));
-					CLogger::DetailedFormat("Args: %s", aArgs.Args());
+					CLogger::DetailedFormat("Args: %s", aArgs.ArgS());
 
 
 					if(Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs))
