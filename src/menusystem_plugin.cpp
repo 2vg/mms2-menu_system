@@ -247,6 +247,191 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 			return true;
 		}});
+
+		// Add player_death event handler for debugging
+		Menu::CGameEventManager2System::AddHandler("player_death", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
+		{
+			auto aPlayerSlot = pEvent->GetPlayerSlot("userid");
+
+			if(aPlayerSlot == CPlayerSlot::InvalidIndex())
+			{
+				return false;
+			}
+
+			// DEBUG: Log player death event
+			Msg("[MENU DEBUG] Player death event - Player: %d\n", aPlayerSlot.GetClientIndex());
+
+			auto &aPlayerData = GetPlayerData(aPlayerSlot);
+			const auto &vecMenus = aPlayerData.GetMenus();
+
+			// DEBUG: Log menu count for this player
+			Msg("[MENU DEBUG] Player %d has %d active menus\n", aPlayerSlot.GetClientIndex(), vecMenus.Count());
+
+			// Log each menu's item count
+			FOR_EACH_VEC(vecMenus, i)
+			{
+				const auto &[_, pMenu] = vecMenus[i];
+				CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+				if(pInternalMenu)
+				{
+					Msg("[MENU DEBUG] Menu %d has %d items\n", i, pInternalMenu->GetItemsRef().Count());
+				}
+			}
+
+			return true;
+		}});
+	}
+
+	// Chat commands.
+	{
+		Menu::CChatCommandSystem::AddHandler("menu", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
+		{
+			CSingleRecipientFilter aFilter(aSlot);
+
+			int iSlot = aSlot.Get();
+
+			Assert(0 <= iSlot && iSlot < sizeof(m_aPlayers));
+
+			auto &aPlayer = m_aPlayers[iSlot];
+
+			if(!aPlayer.IsConnected())
+			{
+				return false;
+			}
+
+			// Create & display test menu with 6 items like C# example.
+			{
+				auto *pProfile = Menu::CProfileSystem::GetInternal();
+
+				CMenu *pInternalMenu = CreateInternalMenu(pProfile);
+
+				pInternalMenu->GetTitleRef().Set("Test Menu (6 items)");
+
+				auto &vecItems = pInternalMenu->GetItemsRef();
+
+				static class CMenuSelectHandler : public IMenu::IItemHandler
+				{
+				public:
+					CMenuSelectHandler(MenuSystem_Plugin *pPlugin) : m_pPlugin(pPlugin) {}
+
+				public:
+					void OnMenuSelectItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::ItemPositionOnPage_t iItemOnPage, void *pData) override
+					{
+						CSingleRecipientFilter aFilter(aSlot);
+
+						// DEBUG: Log menu item selection
+						Msg("[MENU DEBUG] Item selected - Player: %d, Item: %d, ItemOnPage: %d, Data: %p\n",
+							aSlot.GetClientIndex(), iItem, iItemOnPage, pData);
+
+						// Send message to player
+						CBufferStringN<256> sMessage;
+						sMessage.Format("You selected: %s (Item %d)", pMenu->GetItemsRef()[iItem].Get(), iItem + 1);
+						m_pPlugin->SendTextMessage(&aFilter, HUD_PRINTTALK, 1, sMessage.Get());
+					}
+
+				private:
+					MenuSystem_Plugin *m_pPlugin;
+				} s_aItemHandler(this);
+
+				IMenu::IItemHandler *pItemHandler = static_cast<IMenu::IItemHandler *>(&s_aItemHandler);
+
+				// Add exactly 6 items to reproduce the C# example
+				vecItems.AddToTail({"Option 1", pItemHandler, reinterpret_cast<void *>(1)});
+				vecItems.AddToTail({"Option 2", pItemHandler, reinterpret_cast<void *>(2)});
+				vecItems.AddToTail({"Option 3", pItemHandler, reinterpret_cast<void *>(3)});
+				vecItems.AddToTail({"Option 4", pItemHandler, reinterpret_cast<void *>(4)});
+				vecItems.AddToTail({"Option 5", pItemHandler, reinterpret_cast<void *>(5)});
+				vecItems.AddToTail({"Option 6", pItemHandler, reinterpret_cast<void *>(6)});
+
+				Msg("[MENU DEBUG] Created test menu with %d items for player %d\n", vecItems.Count(), aSlot.GetClientIndex());
+
+				return DisplayInternalMenuToPlayer(pInternalMenu, aSlot);
+			}
+		}});
+
+		Menu::CChatCommandSystem::AddHandler("submenu", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
+		{
+			CSingleRecipientFilter aFilter(aSlot);
+
+			int iSlot = aSlot.Get();
+
+			Assert(0 <= iSlot && iSlot < sizeof(m_aPlayers));
+
+			auto &aPlayer = m_aPlayers[iSlot];
+
+			if(!aPlayer.IsConnected())
+			{
+				return false;
+			}
+
+			// Create & display submenu with 4 items like C# example.
+			{
+				auto *pProfile = Menu::CProfileSystem::GetInternal();
+
+				CMenu *pInternalMenu = CreateInternalMenu(pProfile);
+
+				pInternalMenu->GetTitleRef().Set("Submenu (4 items)");
+
+				auto &vecItems = pInternalMenu->GetItemsRef();
+
+				static class CSubmenuSelectHandler : public IMenu::IItemHandler
+				{
+				public:
+					CSubmenuSelectHandler(MenuSystem_Plugin *pPlugin) : m_pPlugin(pPlugin) {}
+
+				public:
+					void OnMenuSelectItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::ItemPositionOnPage_t iItemOnPage, void *pData) override
+					{
+						CSingleRecipientFilter aFilter(aSlot);
+
+						// DEBUG: Log submenu item selection
+						Msg("[MENU DEBUG] Submenu item selected - Player: %d, Item: %d, ItemOnPage: %d, Data: %p\n",
+							aSlot.GetClientIndex(), iItem, iItemOnPage, pData);
+
+						// Send message to player
+						CBufferStringN<256> sMessage;
+						sMessage.Format("You selected: %s (Submenu Item %d)", pMenu->GetItemsRef()[iItem].Get(), iItem + 1);
+						m_pPlugin->SendTextMessage(&aFilter, HUD_PRINTTALK, 1, sMessage.Get());
+					}
+
+				private:
+					MenuSystem_Plugin *m_pPlugin;
+				} s_aSubmenuItemHandler(this);
+
+				IMenu::IItemHandler *pItemHandler = static_cast<IMenu::IItemHandler *>(&s_aSubmenuItemHandler);
+
+				// Add exactly 4 items to reproduce the C# submenu example
+				vecItems.AddToTail({"Submenu Option 1", pItemHandler, reinterpret_cast<void *>(11)});
+				vecItems.AddToTail({"Submenu Option 2", pItemHandler, reinterpret_cast<void *>(12)});
+				vecItems.AddToTail({"Submenu Option 3", pItemHandler, reinterpret_cast<void *>(13)});
+				vecItems.AddToTail({"Submenu Option 4", pItemHandler, reinterpret_cast<void *>(14)});
+
+				Msg("[MENU DEBUG] Created submenu with %d items for player %d\n", vecItems.Count(), aSlot.GetClientIndex());
+
+				return DisplayInternalMenuToPlayer(pInternalMenu, aSlot);
+			}
+		}});
+
+		Menu::CChatCommandSystem::AddHandler("menu_clear", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
+		{
+			auto &aPlayer = GetPlayerData(aSlot);
+
+			if(!aPlayer.IsConnected())
+			{
+				return false;
+			}
+
+			auto &vecMenus = aPlayer.GetMenus();
+
+			for(const auto &[_, pMenu] : vecMenus)
+			{
+				CloseInstance(pMenu);
+			}
+
+			Msg("[MENU DEBUG] Cleared all menus for player %d\n", aSlot.GetClientIndex());
+
+			return true;
+		}});
 	}
 }
 
