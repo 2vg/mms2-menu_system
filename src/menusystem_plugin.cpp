@@ -4191,6 +4191,9 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 		}
 
 		// Change the weapon selection to an item of the menu.
+		// DISABLED: This causes double execution when users have menuselect bound to 1-9 keys
+		// The menuselect command already handles menu item selection properly
+		/*
 		if(pBaseUserCmd->has_weaponselect())
 		{
 			int iClient = aPlayerSlot.GetClientIndex();
@@ -4218,6 +4221,7 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 				}
 			}
 		}
+		*/
 	}
 
 	return false;
