@@ -92,8 +92,9 @@ MenuSystem_Plugin::MenuSystem_Plugin()
     	LoggingSystem_AddTagToChannel(nTagChannelID, s_aMenuPlugin.GetLogTag());
     }, 0, LV_DETAILED, MENUSYSTEM_LOGGINING_COLOR),
 
-    m_aEnableClientCommandDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_client_command_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable client command detial messages", false, true, false, true, true), 
+    m_aEnableClientCommandDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_client_command_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable client command detial messages", false, true, false, true, true),
     m_aEnablePlayerRunCmdDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_player_runcmd_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable player usercmds detial messages", false, true, false, true, true),
+    m_aEnableChatCommandsConVar("mm_" META_PLUGIN_PREFIX "_enable_chat_commands", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable chat commands", false, true, false, true, true),
 
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
     m_mapLanguages(DefLessFunc(const CUtlSymbolLarge)),
@@ -330,9 +331,12 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 		return false;
 	}
 
-	if(!LoadChat(error, maxlen))
+	if (m_aEnableChatCommandsConVar.GetBool())
 	{
-		return false;
+		if (!LoadChat(error, maxlen))
+		{
+			return false;
+		}
 	}
 
 	if(!RegisterGameFactory(error, maxlen))
@@ -340,7 +344,10 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 		return false;
 	}
 
-	SH_ADD_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystem_Plugin::OnDispatchConCommandHook), false);
+	if (m_aEnableChatCommandsConVar.GetBool())
+	{
+		SH_ADD_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystem_Plugin::OnDispatchConCommandHook), false);
+	}
 	SH_ADD_HOOK(INetworkServerService, StartupServer, g_pNetworkServerService, SH_MEMBER(this, &MenuSystem_Plugin::OnStartupServerHook), true);
 	SH_ADD_HOOK(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, SH_MEMBER(this, &MenuSystem_Plugin::OnCheckTransmitHook), true);
 
@@ -402,16 +409,22 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 
 	SH_REMOVE_HOOK(INetworkServerService, StartupServer, g_pNetworkServerService, SH_MEMBER(this, &MenuSystem_Plugin::OnStartupServerHook), true);
 	SH_REMOVE_HOOK(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, SH_MEMBER(this, &MenuSystem_Plugin::OnCheckTransmitHook), true);
-	SH_REMOVE_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystem_Plugin::OnDispatchConCommandHook), false);
+	if (m_aEnableChatCommandsConVar.GetBool())
+	{
+		SH_REMOVE_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystem_Plugin::OnDispatchConCommandHook), false);
+	}
 
 	if(!UnhookGameEvents(error, maxlen))
 	{
 		return false;
 	}
 
-	if(!ClearChat(error, maxlen))
+	if (m_aEnableChatCommandsConVar.GetBool())
 	{
-		return false;
+		if(!ClearChat(error, maxlen))
+		{
+			return false;
+		}
 	}
 
 	if(!ClearProfiles(error, maxlen))
@@ -3086,6 +3099,12 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 			{
 				pszArg1++; // Skip a command character.
 
+				// Print a chat message before.
+				if(!bIsSilent && g_pCVar)
+				{
+					SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
+				}
+
 				// Call the handler.
 				{
 					size_t nArg1Length = 0;
@@ -3107,9 +3126,9 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 
 					if(CLogger::IsChannelEnabled(LV_DETAILED))
 					{
-						const auto &aConcat = g_aEmbedConcat,
-						           &aConcat2 = g_aEmbed2Concat,
-						           &aConcat3 = g_aEmbed3Concat;
+						const auto &aConcat = g_aEmbedConcat, 
+						           &aConcat2 = g_aEmbed2Concat, 
+											 &aConcat3 = g_aEmbed3Concat;
 
 						CBufferStringN<1024> sBuffer;
 
@@ -3128,17 +3147,10 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						CLogger::Detailed(sBuffer);
 					}
 
-					if(Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs))
-					{
-						// Print a chat message before.
-						if(!bIsSilent && g_pCVar)
-						{
-							SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
-						}
-
-						RETURN_META(MRES_SUPERCEDE);
-					}
+					Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
 				}
+
+				RETURN_META(MRES_SUPERCEDE);
 			}
 		}
 	}
