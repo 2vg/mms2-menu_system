@@ -3128,15 +3128,27 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						CLogger::Detailed(sBuffer);
 					}
 
+					CLogger::DetailedFormat("Command string: %s", aArgs.GetCommandString());
+					CLogger::DetailedFormat("Arg 0: %s", aArgs.Arg(0));
+					CLogger::DetailedFormat("Arg 1: %s", aArgs.Arg(1));
+					CLogger::DetailedFormat("Args: %s", aArgs.Args());
+
+
 					if(Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs))
 					{
 						// Print a chat message before.
 						if(!bIsSilent && g_pCVar)
 						{
+							CLogger::Detailed("Dispatching original command for public chat.");
 							SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
 						}
 
+						CLogger::Detailed("Command handled by menu system, superseding.");
 						RETURN_META(MRES_SUPERCEDE);
+					}
+					else
+					{
+						CLogger::Detailed("Command not handled by menu system, ignoring.");
 					}
 				}
 			}
