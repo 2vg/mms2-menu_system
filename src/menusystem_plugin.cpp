@@ -94,7 +94,6 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
     m_aEnableClientCommandDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_client_command_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable client command detial messages", false, true, false, true, true),
     m_aEnablePlayerRunCmdDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_player_runcmd_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable player usercmds detial messages", false, true, false, true, true),
-    m_aEnableChatCommandsConVar("mm_" META_PLUGIN_PREFIX "_enable_chat_commands", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable chat commands", false, true, false, true, true),
 
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
     m_mapLanguages(DefLessFunc(const CUtlSymbolLarge)),
@@ -331,12 +330,9 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 		return false;
 	}
 
-	if (m_aEnableChatCommandsConVar.GetBool())
+	if (!LoadChat(error, maxlen))
 	{
-		if (!LoadChat(error, maxlen))
-		{
-			return false;
-		}
+		return false;
 	}
 
 	if(!RegisterGameFactory(error, maxlen))
@@ -344,10 +340,7 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 		return false;
 	}
 
-	if (m_aEnableChatCommandsConVar.GetBool())
-	{
-		SH_ADD_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystem_Plugin::OnDispatchConCommandHook), false);
-	}
+	SH_ADD_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystem_Plugin::OnDispatchConCommandHook), false);
 	SH_ADD_HOOK(INetworkServerService, StartupServer, g_pNetworkServerService, SH_MEMBER(this, &MenuSystem_Plugin::OnStartupServerHook), true);
 	SH_ADD_HOOK(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, SH_MEMBER(this, &MenuSystem_Plugin::OnCheckTransmitHook), true);
 
@@ -409,22 +402,16 @@ bool MenuSystem_Plugin::Unload(char *error, size_t maxlen)
 
 	SH_REMOVE_HOOK(INetworkServerService, StartupServer, g_pNetworkServerService, SH_MEMBER(this, &MenuSystem_Plugin::OnStartupServerHook), true);
 	SH_REMOVE_HOOK(ISource2GameEntities, CheckTransmit, g_pSource2GameEntities, SH_MEMBER(this, &MenuSystem_Plugin::OnCheckTransmitHook), true);
-	if (m_aEnableChatCommandsConVar.GetBool())
-	{
-		SH_REMOVE_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystem_Plugin::OnDispatchConCommandHook), false);
-	}
+	SH_REMOVE_HOOK(ICvar, DispatchConCommand, g_pCVar, SH_MEMBER(this, &MenuSystem_Plugin::OnDispatchConCommandHook), false);
 
 	if(!UnhookGameEvents(error, maxlen))
 	{
 		return false;
 	}
 
-	if (m_aEnableChatCommandsConVar.GetBool())
+	if(!ClearChat(error, maxlen))
 	{
-		if(!ClearChat(error, maxlen))
-		{
-			return false;
-		}
+		return false;
 	}
 
 	if(!ClearProfiles(error, maxlen))
