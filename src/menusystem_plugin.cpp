@@ -3134,10 +3134,16 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						CLogger::Detailed(sBuffer);
 					}
 
-					Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
+					if(Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs))
+					{
+						RETURN_META(MRES_SUPERCEDE);
+					}
 				}
 
-				RETURN_META(MRES_SUPERCEDE);
+				if(bIsSilent)
+				{
+					SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
+				}
 			}
 		}
 	}
