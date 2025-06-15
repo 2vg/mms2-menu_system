@@ -248,41 +248,9 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 			return true;
 		}});
-
-		// Add player_death event handler for debugging
-		Menu::CGameEventManager2System::AddHandler("player_death", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
-		{
-			auto aPlayerSlot = pEvent->GetPlayerSlot("userid");
-
-			if(aPlayerSlot == CPlayerSlot::InvalidIndex())
-			{
-				return false;
-			}
-
-			// DEBUG: Log player death event
-			Msg("[MENU DEBUG] Player death event - Player: %d\n", aPlayerSlot.GetClientIndex());
-
-			auto &aPlayerData = GetPlayerData(aPlayerSlot);
-			const auto &vecMenus = aPlayerData.GetMenus();
-
-			// DEBUG: Log menu count for this player
-			Msg("[MENU DEBUG] Player %d has %d active menus\n", aPlayerSlot.GetClientIndex(), vecMenus.Count());
-
-			// Log each menu's item count
-			FOR_EACH_VEC(vecMenus, i)
-			{
-				const auto &[_, pMenu] = vecMenus[i];
-				CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
-				if(pInternalMenu)
-				{
-					Msg("[MENU DEBUG] Menu %d has %d items\n", i, pInternalMenu->GetItemsRef().Count());
-				}
-			}
-
-			return true;
-		}});
 	}
 
+	/*
 	// Chat commands.
 	{
 		Menu::CChatCommandSystem::AddHandler("menu", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
@@ -320,10 +288,6 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 					{
 						CSingleRecipientFilter aFilter(aSlot);
 
-						// DEBUG: Log menu item selection
-						Msg("[MENU DEBUG] Item selected - Player: %d, Item: %d, ItemOnPage: %d, Data: %p\n",
-							aSlot.GetClientIndex(), iItem, iItemOnPage, pData);
-
 						// Send message to player
 						CBufferStringN<256> sMessage;
 						sMessage.Format("You selected: %s (Item %d)", pMenu->GetItemsRef()[iItem].Get(), iItem + 1);
@@ -343,8 +307,6 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				vecItems.AddToTail({"Option 4", pItemHandler, reinterpret_cast<void *>(4)});
 				vecItems.AddToTail({"Option 5", pItemHandler, reinterpret_cast<void *>(5)});
 				vecItems.AddToTail({"Option 6", pItemHandler, reinterpret_cast<void *>(6)});
-
-				Msg("[MENU DEBUG] Created test menu with %d items for player %d\n", vecItems.Count(), aSlot.GetClientIndex());
 
 				return DisplayInternalMenuToPlayer(pInternalMenu, aSlot);
 			}
@@ -385,10 +347,6 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 					{
 						CSingleRecipientFilter aFilter(aSlot);
 
-						// DEBUG: Log submenu item selection
-						Msg("[MENU DEBUG] Submenu item selected - Player: %d, Item: %d, ItemOnPage: %d, Data: %p\n",
-							aSlot.GetClientIndex(), iItem, iItemOnPage, pData);
-
 						// Send message to player
 						CBufferStringN<256> sMessage;
 						sMessage.Format("You selected: %s (Submenu Item %d)", pMenu->GetItemsRef()[iItem].Get(), iItem + 1);
@@ -406,8 +364,6 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				vecItems.AddToTail({"Submenu Option 2", pItemHandler, reinterpret_cast<void *>(12)});
 				vecItems.AddToTail({"Submenu Option 3", pItemHandler, reinterpret_cast<void *>(13)});
 				vecItems.AddToTail({"Submenu Option 4", pItemHandler, reinterpret_cast<void *>(14)});
-
-				Msg("[MENU DEBUG] Created submenu with %d items for player %d\n", vecItems.Count(), aSlot.GetClientIndex());
 
 				return DisplayInternalMenuToPlayer(pInternalMenu, aSlot);
 			}
@@ -429,11 +385,10 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 				CloseInstance(pMenu);
 			}
 
-			Msg("[MENU DEBUG] Cleared all menus for player %d\n", aSlot.GetClientIndex());
-
 			return true;
 		}});
 	}
+	*/
 }
 
 bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
