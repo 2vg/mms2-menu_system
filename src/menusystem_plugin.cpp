@@ -3300,7 +3300,7 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 					{
 						const auto &aConcat = g_aEmbedConcat, 
 						           &aConcat2 = g_aEmbed2Concat, 
-											 &aConcat3 = g_aEmbed3Concat;
+						           &aConcat3 = g_aEmbed3Concat;
 
 						CBufferStringN<1024> sBuffer;
 
@@ -3322,7 +3322,20 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 					Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
 				}
 
-				RETURN_META(MRES_SUPERCEDE);
+				// For silent commands, allow other plugins to process after our handling
+				if(bIsSilent)
+				{
+					if(CLogger::IsChannelEnabled(LV_DETAILED))
+					{
+						CLogger::Detailed("Silent command processed, allowing other plugins to handle\n");
+					}
+					RETURN_META(MRES_IGNORED);
+				}
+				else
+				{
+					// For public commands, we already dispatched the original command above
+					RETURN_META(MRES_SUPERCEDE);
+				}
 			}
 		}
 	}
