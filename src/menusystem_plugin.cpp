@@ -94,6 +94,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
     m_aEnableClientCommandDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_client_command_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable client command detial messages", false, true, false, true, true),
     m_aEnablePlayerRunCmdDetailsConVar("mm_" META_PLUGIN_PREFIX "_enable_player_runcmd_details", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable player usercmds detial messages", false, true, false, true, true),
+    m_aEnableSilentCommandDispatchConVar("mm_" META_PLUGIN_PREFIX "_enable_silent_command_dispatch", FCVAR_RELEASE | FCVAR_GAMEDLL, "Enable dispatching silent commands to other plugins", true, true, false, true, true),
 
     m_mapConVarCookies(DefLessFunc(const CUtlSymbolLarge)),
     m_mapLanguages(DefLessFunc(const CUtlSymbolLarge)),
@@ -3322,20 +3323,27 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 					Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
 				}
 
-				// For silent commands, allow other plugins to process after our handling
+				// For silent commands, conditionally allow other plugins to process
 				if(bIsSilent)
 				{
-					if(CLogger::IsChannelEnabled(LV_DETAILED))
+					if(m_aEnableSilentCommandDispatchConVar.GetBool())
 					{
-						CLogger::Detailed("Silent command processed, allowing other plugins to handle\n");
+						if(CLogger::IsChannelEnabled(LV_DETAILED))
+						{
+							CLogger::Detailed("Silent command processed, dispatching original command for other plugins (enabled by ConVar)\n");
+						}
+						// Dispatch the original command so other plugins can see it
+						SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
 					}
-					RETURN_META(MRES_IGNORED);
+					else
+					{
+						if(CLogger::IsChannelEnabled(LV_DETAILED))
+						{
+							CLogger::Detailed("Silent command processed, NOT dispatching to other plugins (disabled by ConVar)\n");
+						}
+					}
 				}
-				else
-				{
-					// For public commands, we already dispatched the original command above
-					RETURN_META(MRES_SUPERCEDE);
-				}
+				RETURN_META(MRES_SUPERCEDE);
 			}
 		}
 	}

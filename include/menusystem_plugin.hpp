@@ -461,6 +461,7 @@ private:
 private: // ConVars. See the constructor
 	CConVar<bool> m_aEnableClientCommandDetailsConVar;
 	CConVar<bool> m_aEnablePlayerRunCmdDetailsConVar;
+	CConVar<bool> m_aEnableSilentCommandDispatchConVar;
 
 public: // SourceHooks.
 	void OnStartupServerHook(const GameSessionConfiguration_t &config, ISource2WorldSession *pWorldSession, const char *);
