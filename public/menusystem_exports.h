@@ -52,6 +52,7 @@ using IMenu_t = IMenu;
 using IMenuItemPosition_t = IMenu::ItemPosition_t;
 using IMenuItemStyleFlags_t = IMenu::ItemStyleFlags_t;
 using IMenuItemHandler_t = void (*)(IMenu_t *pMenu, CPlayerSlot aSlot, IMenuItemPosition_t iItem, IMenuItemPosition_t iItemOnPage, void *pData);
+using CSharpMenuItemHandler_t = void (*)(IMenu_t *pMenu, int aSlot, int iItem, int iItemOnPage, void *pData);
 using IMenuItemControlFlags_t = IMenu::ItemControlFlags_t;
 using IMenuProfile_t = IMenuProfile;
 #	else
