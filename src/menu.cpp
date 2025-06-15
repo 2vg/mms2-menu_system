@@ -156,7 +156,7 @@ inline uint8 CMenu::GetMaxItemsPerPageWithoutControls()
 {
 	auto eControlFlags = m_aData.m_eControlFlags;
 
-	return sm_nMaxItemsPerPage - (!!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT));
+	return sm_nMaxItemsPerPage - (!!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_NEXT) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT));
 }
 
 CMenu::IPage *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem, DisplayFlags_t eFlags)
