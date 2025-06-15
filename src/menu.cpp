@@ -156,7 +156,7 @@ inline uint8 CMenu::GetMaxItemsPerPageWithoutControls()
 {
 	auto eControlFlags = m_aData.m_eControlFlags;
 
-	return sm_nMaxItemsPerPage - (!!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT));
+	return sm_nMaxItemsPerPage - (!!(eControlFlags & MENU_ITEM_CONTROL_FLAG_BACK) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_NEXT) + !!(eControlFlags & MENU_ITEM_CONTROL_FLAG_EXIT));
 }
 
 CMenu::IPage *CMenu::Render(CPlayerSlot aSlot, ItemPosition_t iStartItem, DisplayFlags_t eFlags)
@@ -210,8 +210,13 @@ bool CMenu::InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem, Disp
 
 bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem, DisplayFlags_t eFlags)
 {
+	// DEBUG: Log menu selection attempt
+	Msg("[MENU DEBUG] OnSelect called - Player: %d, SelectedItem: %d, ItemCount: %d\n",
+		aSlot.GetClientIndex(), iSlectedItem, m_aData.m_vecItems.Count());
+
 	if(iSlectedItem == -1)
 	{
+		Msg("[MENU DEBUG] OnSelect failed - Invalid selected item (-1)\n");
 		return false;
 	}
 
@@ -247,6 +252,10 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem, DisplayFlags_t eFlags)
 		iTargetItem = iStartItem + iSlectedItem - 1;
 	}
 
+	// DEBUG: Log target item calculation
+	Msg("[MENU DEBUG] Target item calculation - StartItem: %d, TargetItem: %d, IsControl: %s\n",
+		iStartItem, iTargetItem, (bIsNullableItem || bIsAboveItem) ? "true" : "false");
+
 	auto &vecItems = m_aData.m_vecItems;
 
 	if(bIsNullableItem || bIsAboveItem) // Is control
@@ -279,23 +288,46 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem, DisplayFlags_t eFlags)
 		}
 	}
 
+	// DEBUG: Check if target item is valid
 	if(0 <= iTargetItem && iTargetItem < vecItems.Count())
 	{
 		auto &aItem = vecItems[iTargetItem];
 
+		if (!(aItem.GetStyle() & IMenu::MENU_ITEM_ACTIVE))
+		{
+			return false;
+		}
+
 		auto *pItemHandler = aItem.m_pHandler;
+
+		Msg("[MENU DEBUG] Valid target item %d - HasHandler: %s, Content: '%s'\n",
+			iTargetItem, pItemHandler ? "true" : "false", aItem.m_sContent.Get());
 
 		if(pItemHandler)
 		{
+			Msg("[MENU DEBUG] Calling OnMenuSelectItem for item %d\n", iTargetItem);
 			pItemHandler->OnMenuSelectItem(static_cast<IMenu *>(this), aSlot, iTargetItem, iItemOnPage, aItem.m_pData);
 		}
+		else
+		{
+			Msg("[MENU DEBUG] No item handler for item %d\n", iTargetItem);
+		}
+	}
+	else
+	{
+		Msg("[MENU DEBUG] Invalid target item %d (valid range: 0-%d)\n", iTargetItem, vecItems.Count() - 1);
 	}
 
 	auto *pHandler = GetHandler();
 
 	if(pHandler)
 	{
+		Msg("[MENU DEBUG] Calling OnMenuSelect for item %d\n", iTargetItem);
 		pHandler->OnMenuSelect(static_cast<IMenu *>(this), aSlot, iTargetItem);
+	}
+	else
+	{
+		Msg("[MENU DEBUG] No menu handler\n");
 	}
 
 	return true;

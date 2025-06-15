@@ -48,7 +48,7 @@ namespace Menu
 	{
 	public:
 		CSystemBase()
-		  : CLogger(GetName(), NULL, 0, LV_OFF, MENU_SYSTEMBASE_LOGGINING_COLOR),
+		  : CLogger(GetName(), NULL, 0, LV_DEFAULT, MENU_SYSTEMBASE_LOGGINING_COLOR),
 		    m_mapCallbacks(DefLessFunc(const CUtlSymbolLarge))
 		{
 		}

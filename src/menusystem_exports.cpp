@@ -196,3 +196,46 @@ MENU_DLL_EXPORT IMenu_t *Menu_GetPlayerActiveMenu(IMenuSystem_t *pSystem, CPlaye
 
 	return vecMenus[iActiveMenu].m_pInstance;
 }
+
+// C# callback support
+typedef void (*CSharpMenuItemHandler_t)(IMenu_t *pMenu, int aSlot, int iItem, int iItemOnPage, void *pData);
+
+static std::map<std::pair<IMenuItemPosition_t, IMenu_t *>, CSharpMenuItemHandler_t> g_mapCSharpHandlers;
+
+void CSharpMenuItemCallback(IMenu_t *pMenu, CPlayerSlot aSlot, IMenuItemPosition_t iItem, IMenuItemPosition_t iItemOnPage, void *pData)
+{
+	auto itFound = g_mapCSharpHandlers.find({iItem, pMenu});
+	if (itFound != g_mapCSharpHandlers.end() && itFound->second)
+	{
+		itFound->second(pMenu, aSlot.Get(), iItem, iItemOnPage, pData);
+	}
+}
+
+MENU_DLL_EXPORT IMenuItemPosition_t Menu_AddItemWithCSharpHandler(IMenu_t *pMenu, IMenuItemStyleFlags_t eFlags, const char *pszContent, CSharpMenuItemHandler_t pfnCSharpHandler, void *pData)
+{
+	auto &vecItems = pMenu->GetItemsRef();
+	auto position = vecItems.Count();
+	
+	if (pfnCSharpHandler)
+	{
+		g_mapCSharpHandlers[{position, pMenu}] = pfnCSharpHandler;
+		g_aMenuWrapper.AddHandler(std::make_pair(position, pMenu), CSharpMenuItemCallback);
+	}
+	
+	return vecItems.AddToTail({eFlags, pszContent, static_cast<IMenu::IItemHandler *>(&g_aMenuWrapper), pData});
+}
+
+MENU_DLL_EXPORT void Menu_RemoveCSharpHandlers(IMenu_t *pMenu)
+{
+	for (auto it = g_mapCSharpHandlers.begin(); it != g_mapCSharpHandlers.end();)
+	{
+		if (it->first.second == pMenu)
+		{
+			it = g_mapCSharpHandlers.erase(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+}
