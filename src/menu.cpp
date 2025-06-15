@@ -293,6 +293,11 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem, DisplayFlags_t eFlags)
 	{
 		auto &aItem = vecItems[iTargetItem];
 
+		if (!(aItem.GetStyle() & IMenu::MENU_ITEM_ACTIVE))
+		{
+			return false;
+		}
+
 		auto *pItemHandler = aItem.m_pHandler;
 
 		Msg("[MENU DEBUG] Valid target item %d - HasHandler: %s, Content: '%s'\n",
