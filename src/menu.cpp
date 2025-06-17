@@ -500,7 +500,7 @@ void CMenu::CPageBase::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlo
 
 		int nLeftItems = vecItems.Count() - iStartPosition;
 
-		const bool bItemsOverflow = nLeftItems >= nMaxItems, // If are elements after.
+		const bool bItemsOverflow = nLeftItems > nMaxItems, // If are elements after.
 		           bItemsHasLeft = iStartPosition >= nMaxItems; // If are elements behind.
 
 		const ItemPosition_t nItemsOnPage = bItemsOverflow ? (iStartPosition + nMaxItems) : vecItems.Count();
@@ -654,7 +654,7 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 
 		int nLeftItems = vecItems.Count() - iStartPosition;
 
-		const bool bItemsOverflow = nLeftItems >= nMaxItems, 
+		const bool bItemsOverflow = nLeftItems > nMaxItems,
 		           bItemsHasLeft = iStartPosition >= nMaxItems;
 
 		const ItemPosition_t nItemsOnPage = bItemsOverflow ? (iStartPosition + nMaxItems) : vecItems.Count();

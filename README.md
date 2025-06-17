@@ -78,3 +78,31 @@ cmake --build --preset Debug --parallel
 * Once the plugin is compiled the files would be packaged and placed in ``build/{OS}/{PRESET}`` folder.
 * Be aware that plugins get loaded either by corresponding ``.vdf`` files in the metamod folder, or by listing them in ``addons/metamod/metaplugins.ini`` file.
 * Copy the following folders into the plugin folder: `configs`, `gamedata` and `translations`.
+
+### 5. Extra
+
+#### To prevent console spam
+
+Add these to `cleanercs2`
+
+```cfg
+.*OnMenuStart.*
+.*OnMenuSelect.*
+.*OnMenuEnd.*
+.*OnMenuDestroy.*
+.*OnDispatchConCommandHook.*
+.*OnMenuDrawTitle.*
+.*OnMenuDisplayItem.*
+.*point_worldtext.*
+.*Menu entities position.*
+.*Origin:.*
+.*Rotation.*
+.*predicted_viewmodel.*
+.*Handle a chat command:.*
+.*Player slot:.*
+.*Is silent: .*
+.*Arguments:.*
+.*CNETMsg_SetConVar.*
+.*sv_disable_radar.*
+.*select item.*
+```
