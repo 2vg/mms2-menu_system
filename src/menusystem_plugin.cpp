@@ -3275,7 +3275,62 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						CLogger::Detailed(sBuffer);
 					}
 
-					Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
+					// Check if the command is a number (for menu selection)
+					const char* pszCommand = vecArgs[0].Get();
+					bool bIsMenuSelect = false;
+					int iSelectItem = -1;
+					
+					// Check if it's a single digit (1-9, 0)
+					if (strlen(pszCommand) == 1 && isdigit(pszCommand[0]))
+					{
+						iSelectItem = pszCommand[0] - '0';
+						if (iSelectItem == 0) iSelectItem = 10; // 0 represents item 10
+						
+						// Check if player has active menus
+						auto &aPlayer = GetPlayerData(aPlayerSlot);
+						if (aPlayer.IsConnected())
+						{
+							auto &vecMenus = aPlayer.GetMenus();
+							if (vecMenus.Count() > 0)
+							{
+								bIsMenuSelect = true;
+								
+								if(CLogger::IsChannelEnabled(LV_DETAILED))
+								{
+									CLogger::DetailedFormat("Chat menu select: Player %d selected item %d\n", aPlayerSlot.Get(), iSelectItem);
+								}
+								
+								// Handle menu selection
+								IMenu::Index_t iActiveMenu = aPlayer.GetActiveMenuIndex();
+								
+								if(iActiveMenu == MENU_INVLID_INDEX)
+								{
+									// No specific active menu, use first available
+									const auto &[_, pMenu] = vecMenus.Element(0);
+									CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+									if(pInternalMenu)
+									{
+										pInternalMenu->OnSelect(aPlayerSlot, iSelectItem, IMenu::MENU_DISPLAY_DEFAULT);
+									}
+								}
+								else
+								{
+									// Use the active menu
+									CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(vecMenus[iActiveMenu].m_pInstance);
+									if(pInternalMenu)
+									{
+										pInternalMenu->OnSelect(aPlayerSlot, iSelectItem, IMenu::MENU_DISPLAY_DEFAULT);
+									}
+								}
+							}
+						}
+					}
+					
+					// If not a menu selection, handle as regular chat command
+					if (!bIsMenuSelect)
+					{
+						Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
+					}
 				}
 
 				// For silent commands, conditionally allow other plugins to process
