@@ -1466,6 +1466,8 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
 
 		auto &vecMenus = aPlayer.GetMenus();
 
+		bool bNeedUpdate = false;
+
 		FOR_EACH_VEC_BACK(vecMenus, i)
 		{
 			const auto &[nEndTimestamp, pMenu] = vecMenus.Element(i);
@@ -1485,6 +1487,7 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
 			if(i == iActiveMenu)
 			{
 				iActiveMenu--;
+				bNeedUpdate = true;
 			}
 
 			vecMenus.Remove(i);
@@ -1493,6 +1496,17 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
 
 			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Timeout, false);
 			m_MenuAllocator.ReleaseByMemBlock(pMemBlock);
+		}
+
+		// Update player menus if the active menu was closed due to timeout
+		if(bNeedUpdate && vecMenus.Count())
+		{
+			if(iActiveMenu == MENU_INVLID_INDEX)
+			{
+				iActiveMenu = 0;
+			}
+
+			UpdatePlayerMenus(aPlayer.GetServerSideClient()->GetPlayerSlot());
 		}
 	}
 }
