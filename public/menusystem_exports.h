@@ -52,7 +52,6 @@ using IMenu_t = IMenu;
 using IMenuItemPosition_t = IMenu::ItemPosition_t;
 using IMenuItemStyleFlags_t = IMenu::ItemStyleFlags_t;
 using IMenuItemHandler_t = void (*)(IMenu_t *pMenu, CPlayerSlot aSlot, IMenuItemPosition_t iItem, IMenuItemPosition_t iItemOnPage, void *pData);
-using CSharpMenuItemHandler_t = void (*)(IMenu_t *pMenu, int aSlot, int iItem, int iItemOnPage, void *pData);
 using IMenuItemControlFlags_t = IMenu::ItemControlFlags_t;
 using IMenuProfile_t = IMenuProfile;
 #	else
@@ -68,7 +67,6 @@ enum IMenuItemStyleFlags_t
 	MENU_ITEM_CONTROL =     (1 << 2),
 };
 typedef void (*IMenuItemHandler_t)(IMenu_t *pMenu, CPlayerSlot aSlot, IMenuItemPosition_t iItem, IMenuItemPosition_t iItemOnPage, void *pData);
-typedef void (*CSharpMenuItemHandler_t)(IMenu_t *pMenu, int aSlot, int iItem, int iItemOnPage, void *pData);
 enum IMenuItemControlFlags_t
 {
 	MENU_ITEM_CONTROL_FLAG_PANEL = 0,
@@ -111,8 +109,5 @@ MENU_DLL_EXPORT IMenuItemPosition_t Menu_GetCurrentPosition(IMenu_t *pMenu, CPla
 // Get the currently active menu for a player.
 MENU_DLL_EXPORT IMenu_t *Menu_GetPlayerActiveMenu(IMenuSystem_t *pSystem, CPlayerSlot aSlot);
 
-// C# callback support
-MENU_DLL_EXPORT IMenuItemPosition_t Menu_AddItemWithCSharpHandler(IMenu_t *pMenu, IMenuItemStyleFlags_t eFlags, const char *pszContent, CSharpMenuItemHandler_t pfnCSharpHandler, void *pData);
-MENU_DLL_EXPORT void Menu_RemoveCSharpHandlers(IMenu_t *pMenu);
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENUSYSTEM_EXPORTS_H_
