@@ -251,143 +251,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 	}
 
 	/*
-	// Chat commands.
-	{
-		Menu::CChatCommandSystem::AddHandler("menu", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
-		{
-			CSingleRecipientFilter aFilter(aSlot);
-
-			int iSlot = aSlot.Get();
-
-			Assert(0 <= iSlot && iSlot < sizeof(m_aPlayers));
-
-			auto &aPlayer = m_aPlayers[iSlot];
-
-			if(!aPlayer.IsConnected())
-			{
-				return false;
-			}
-
-			// Create & display test menu with 6 items like C# example.
-			{
-				auto *pProfile = Menu::CProfileSystem::GetInternal();
-
-				CMenu *pInternalMenu = CreateInternalMenu(pProfile);
-
-				pInternalMenu->GetTitleRef().Set("Test Menu (6 items)");
-
-				auto &vecItems = pInternalMenu->GetItemsRef();
-
-				static class CMenuSelectHandler : public IMenu::IItemHandler
-				{
-				public:
-					CMenuSelectHandler(MenuSystem_Plugin *pPlugin) : m_pPlugin(pPlugin) {}
-
-				public:
-					void OnMenuSelectItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::ItemPositionOnPage_t iItemOnPage, void *pData) override
-					{
-						CSingleRecipientFilter aFilter(aSlot);
-
-						// Send message to player
-						CBufferStringN<256> sMessage;
-						sMessage.Format("You selected: %s (Item %d)", pMenu->GetItemsRef()[iItem].Get(), iItem + 1);
-						m_pPlugin->SendTextMessage(&aFilter, HUD_PRINTTALK, 1, sMessage.Get());
-					}
-
-				private:
-					MenuSystem_Plugin *m_pPlugin;
-				} s_aItemHandler(this);
-
-				IMenu::IItemHandler *pItemHandler = static_cast<IMenu::IItemHandler *>(&s_aItemHandler);
-
-				// Add exactly 6 items to reproduce the C# example
-				vecItems.AddToTail({"Option 1", pItemHandler, reinterpret_cast<void *>(1)});
-				vecItems.AddToTail({"Option 2", pItemHandler, reinterpret_cast<void *>(2)});
-				vecItems.AddToTail({"Option 3", pItemHandler, reinterpret_cast<void *>(3)});
-				vecItems.AddToTail({"Option 4", pItemHandler, reinterpret_cast<void *>(4)});
-				vecItems.AddToTail({"Option 5", pItemHandler, reinterpret_cast<void *>(5)});
-				vecItems.AddToTail({"Option 6", pItemHandler, reinterpret_cast<void *>(6)});
-
-				return DisplayInternalMenuToPlayer(pInternalMenu, aSlot);
-			}
-		}});
-
-		Menu::CChatCommandSystem::AddHandler("submenu", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
-		{
-			CSingleRecipientFilter aFilter(aSlot);
-
-			int iSlot = aSlot.Get();
-
-			Assert(0 <= iSlot && iSlot < sizeof(m_aPlayers));
-
-			auto &aPlayer = m_aPlayers[iSlot];
-
-			if(!aPlayer.IsConnected())
-			{
-				return false;
-			}
-
-			// Create & display submenu with 4 items like C# example.
-			{
-				auto *pProfile = Menu::CProfileSystem::GetInternal();
-
-				CMenu *pInternalMenu = CreateInternalMenu(pProfile);
-
-				pInternalMenu->GetTitleRef().Set("Submenu (4 items)");
-
-				auto &vecItems = pInternalMenu->GetItemsRef();
-
-				static class CSubmenuSelectHandler : public IMenu::IItemHandler
-				{
-				public:
-					CSubmenuSelectHandler(MenuSystem_Plugin *pPlugin) : m_pPlugin(pPlugin) {}
-
-				public:
-					void OnMenuSelectItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu::ItemPosition_t iItem, IMenu::ItemPositionOnPage_t iItemOnPage, void *pData) override
-					{
-						CSingleRecipientFilter aFilter(aSlot);
-
-						// Send message to player
-						CBufferStringN<256> sMessage;
-						sMessage.Format("You selected: %s (Submenu Item %d)", pMenu->GetItemsRef()[iItem].Get(), iItem + 1);
-						m_pPlugin->SendTextMessage(&aFilter, HUD_PRINTTALK, 1, sMessage.Get());
-					}
-
-				private:
-					MenuSystem_Plugin *m_pPlugin;
-				} s_aSubmenuItemHandler(this);
-
-				IMenu::IItemHandler *pItemHandler = static_cast<IMenu::IItemHandler *>(&s_aSubmenuItemHandler);
-
-				// Add exactly 4 items to reproduce the C# submenu example
-				vecItems.AddToTail({"Submenu Option 1", pItemHandler, reinterpret_cast<void *>(11)});
-				vecItems.AddToTail({"Submenu Option 2", pItemHandler, reinterpret_cast<void *>(12)});
-				vecItems.AddToTail({"Submenu Option 3", pItemHandler, reinterpret_cast<void *>(13)});
-				vecItems.AddToTail({"Submenu Option 4", pItemHandler, reinterpret_cast<void *>(14)});
-
-				return DisplayInternalMenuToPlayer(pInternalMenu, aSlot);
-			}
-		}});
-
-		Menu::CChatCommandSystem::AddHandler("menu_clear", {[&](const CUtlSymbolLarge &sName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArguments) -> bool
-		{
-			auto &aPlayer = GetPlayerData(aSlot);
-
-			if(!aPlayer.IsConnected())
-			{
-				return false;
-			}
-
-			auto &vecMenus = aPlayer.GetMenus();
-
-			for(const auto &[_, pMenu] : vecMenus)
-			{
-				CloseInstance(pMenu);
-			}
-
-			return true;
-		}});
-	}
+	// Removed test chat commands.
 	*/
 }
 
@@ -1466,6 +1330,8 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
 
 		auto &vecMenus = aPlayer.GetMenus();
 
+		bool bNeedUpdate = false;
+
 		FOR_EACH_VEC_BACK(vecMenus, i)
 		{
 			const auto &[nEndTimestamp, pMenu] = vecMenus.Element(i);
@@ -1485,6 +1351,7 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
 			if(i == iActiveMenu)
 			{
 				iActiveMenu--;
+				bNeedUpdate = true;
 			}
 
 			vecMenus.Remove(i);
@@ -1493,6 +1360,17 @@ GS_EVENT_MEMBER(MenuSystem_Plugin, GameFrameBoundary)
 
 			CloseInternalMenu(pInternalMenu, IMenuHandler::MenuEnd_Timeout, false);
 			m_MenuAllocator.ReleaseByMemBlock(pMemBlock);
+		}
+
+		// Update player menus if the active menu was closed due to timeout
+		if(bNeedUpdate && vecMenus.Count())
+		{
+			if(iActiveMenu == MENU_INVLID_INDEX)
+			{
+				iActiveMenu = 0;
+			}
+
+			UpdatePlayerMenus(aPlayer.GetServerSideClient()->GetPlayerSlot());
 		}
 	}
 }
@@ -1565,43 +1443,7 @@ void MenuSystem_Plugin::OnSpawnGroupInit(SpawnGroupHandle_t hSpawnGroup, IEntity
 
 void MenuSystem_Plugin::OnSpawnGroupCreateLoading(SpawnGroupHandle_t hSpawnGroup, CMapSpawnGroup *pMapSpawnGroup, bool bSynchronouslySpawnEntities, bool bConfirmResourcesLoaded, CUtlVector<const CEntityKeyValues *> &vecKeyValues)
 {
-	if(CLogger::IsChannelEnabled(LV_DETAILED))
-	{
-		CLogger::DetailedFormat("%s(hSpawnGroup = %d, pMapSpawnGroup = %p, bSynchronouslySpawnEntities = %s, bConfirmResourcesLoaded = %s, &vecKeyValues = %p)\n", __FUNCTION__, hSpawnGroup, pMapSpawnGroup, bSynchronouslySpawnEntities ? "true" : "false", bConfirmResourcesLoaded ? "true" : "false", &vecKeyValues);
-	}
-
-	const Vector vecBackgroundOrigin {-42.0f, 30.0f, -159.875f}, 
-	             vecOrigin {-42.0f, 30.0f, -160.0f};
-
-	const QAngle angRotation {180.0f, 0.0f, 0.0f};
-
-	auto *pProfile = Menu::CProfileSystem::GetInternal();
-
-	Assert(pProfile);
-
-	CMenu *pInternalMenu = CreateInternalMenu(pProfile);
-
-	pInternalMenu->GetTitleRef().Set("Title");
-
-	auto &vecItems = pInternalMenu->GetItemsRef();
-
-	vecItems.AddToTail({IMenu::MENU_ITEM_DEFAULT, "Active"});
-	vecItems.AddToTail({IMenu::MENU_ITEM_HASNUMBER, "Inactive"});
-
-	CUtlVector<CEntityKeyValues *> vecMenuKVs = pInternalMenu->GenerateKeyValues(INVALID_PLAYER_SLOT, g_pEntitySystem->GetEntityKeyValuesAllocator());
-
-	{
-		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_BACKGROUND_INDEX], vecBackgroundOrigin, angRotation);
-		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_INACTIVE_INDEX], vecOrigin, angRotation);
-		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_ACTIVE_INDEX], vecOrigin, angRotation);
-	}
-
-	for(auto *pMenuKV : vecMenuKVs)
-	{
-		g_pEntitySystem->AddRefKeyValues(pMenuKV);
-	}
-
-	vecKeyValues.AddMultipleToTail(vecMenuKVs.Count(), vecMenuKVs.Base());
+	// Test menu creation code removed - was causing unwanted "Active/Inactive" menu to appear in world
 }
 
 void MenuSystem_Plugin::OnSpawnGroupDestroyed(SpawnGroupHandle_t hSpawnGroup)
@@ -3275,7 +3117,62 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						CLogger::Detailed(sBuffer);
 					}
 
-					Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
+					// Check if the command is a number (for menu selection)
+					const char* pszCommand = vecArgs[0].Get();
+					bool bIsMenuSelect = false;
+					int iSelectItem = -1;
+					
+					// Check if it's a single digit (1-9, 0)
+					if (strlen(pszCommand) == 1 && isdigit(pszCommand[0]))
+					{
+						iSelectItem = pszCommand[0] - '0';
+						if (iSelectItem == 0) iSelectItem = 10; // 0 represents item 10
+						
+						// Check if player has active menus
+						auto &aPlayer = GetPlayerData(aPlayerSlot);
+						if (aPlayer.IsConnected())
+						{
+							auto &vecMenus = aPlayer.GetMenus();
+							if (vecMenus.Count() > 0)
+							{
+								bIsMenuSelect = true;
+								
+								if(CLogger::IsChannelEnabled(LV_DETAILED))
+								{
+									CLogger::DetailedFormat("Chat menu select: Player %d selected item %d\n", aPlayerSlot.Get(), iSelectItem);
+								}
+								
+								// Handle menu selection
+								IMenu::Index_t iActiveMenu = aPlayer.GetActiveMenuIndex();
+								
+								if(iActiveMenu == MENU_INVLID_INDEX)
+								{
+									// No specific active menu, use first available
+									const auto &[_, pMenu] = vecMenus.Element(0);
+									CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+									if(pInternalMenu)
+									{
+										pInternalMenu->OnSelect(aPlayerSlot, iSelectItem, IMenu::MENU_DISPLAY_DEFAULT);
+									}
+								}
+								else
+								{
+									// Use the active menu
+									CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(vecMenus[iActiveMenu].m_pInstance);
+									if(pInternalMenu)
+									{
+										pInternalMenu->OnSelect(aPlayerSlot, iSelectItem, IMenu::MENU_DISPLAY_DEFAULT);
+									}
+								}
+							}
+						}
+					}
+					
+					// If not a menu selection, handle as regular chat command
+					if (!bIsMenuSelect)
+					{
+						Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
+					}
 				}
 
 				// For silent commands, conditionally allow other plugins to process
