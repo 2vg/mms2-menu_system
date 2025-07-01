@@ -173,6 +173,8 @@ public: // IMenu
 		virtual const char *GetText() const = 0; // Aka background text.
 		virtual const char *GetInactiveText() const = 0;
 		virtual const char *GetActiveText() const = 0;
+		virtual const char *GetTitleText() const = 0;
+		virtual const char *GetDisabledText() const = 0;
 		virtual void Clear() = 0;
 
 		virtual void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems) = 0; // Render a page.
@@ -200,6 +202,16 @@ public: // IMenu
 		}
 
 		const char *GetActiveText() const override
+		{
+			return "";
+		}
+
+		const char *GetTitleText() const override
+		{
+			return m_sText.Get();
+		}
+
+		const char *GetDisabledText() const override
 		{
 			return "";
 		}
@@ -240,12 +252,24 @@ public: // IMenu
 			return m_sActiveText.Get();
 		}
 
+		const char *GetTitleText() const override
+		{
+			return m_sTitleText.Get();
+		}
+
+		const char *GetDisabledText() const override
+		{
+			return m_sDisabledText.Get();
+		}
+
 		void Clear() override
 		{
 			Base::Clear();
 
 			m_sInactiveText.Clear();
 			m_sActiveText.Clear();
+			m_sTitleText.Clear();
+			m_sDisabledText.Clear();
 		}
 
 		void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems) override;
@@ -253,6 +277,8 @@ public: // IMenu
 	private:
 		CBufferStringText m_sInactiveText;
 		CBufferStringText m_sActiveText;
+		CBufferStringText m_sTitleText;
+		CBufferStringText m_sDisabledText;
 	};
 
 	static constexpr uint8 sm_nMaxItemsPerPage = MENU_DEFAULT_ITEMS_COUNT_PER_PAGE;
@@ -286,6 +312,16 @@ protected:
 	CEntityInstance *GetActiveEntity()
 	{
 		return GetActiveEntities()[MENU_ENTITY_ACTIVE_INDEX];
+	}
+
+	CEntityInstance *GetTitleEntity()
+	{
+		return GetActiveEntities()[MENU_ENTITY_TITLE_INDEX];
+	}
+
+	CEntityInstance *GetDisabledEntity()
+	{
+		return GetActiveEntities()[MENU_ENTITY_DISABLED_INDEX];
 	}
 
 protected:
