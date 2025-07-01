@@ -203,7 +203,8 @@ bool CMenu::InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem, Disp
 		InternalSetMessage(MENU_ENTITY_BACKGROUND_INDEX, pPage->GetText());
 		InternalSetMessage(MENU_ENTITY_INACTIVE_INDEX, pPage->GetInactiveText());
 		InternalSetMessage(MENU_ENTITY_ACTIVE_INDEX, pPage->GetActiveText());
-		InternalSetMessage(MENU_ENTITY_DISABLED_ACTIVE_INDEX, pPage->GetDisabledActiveText());
+		// 一時的にDisabledActiveエンティティへのアクセスを無効化
+		// InternalSetMessage(MENU_ENTITY_DISABLED_ACTIVE_INDEX, pPage->GetDisabledActiveText());
 	}
 
 	return true;
@@ -426,10 +427,26 @@ CEntityKeyValues *CMenu::GetAllocatedDisabledActiveKeyValues(CPlayerSlot aSlot, 
 
 		if(bDrawBackground)
 		{
-			pMenuKV->SetString("background_material_name", MENU_EMPTY_BACKGROUND_MATERIAL_NAME); // To align with the background.
+			pMenuKV->SetString("background_material_name", MENU_EMPTY_BACKGROUND_MATERIAL_NAME);
 		}
 
-		pMenuKV->SetString("message", GetCurrentPage(aSlot)->GetDisabledActiveText());
+		const IPage *pCurrentPage = GetCurrentPage(aSlot);
+		if(pCurrentPage)
+		{
+			const char *pszDisabledActiveText = pCurrentPage->GetDisabledActiveText();
+			if(pszDisabledActiveText && *pszDisabledActiveText)
+			{
+				pMenuKV->SetString("message", pszDisabledActiveText);
+			}
+			else
+			{
+				pMenuKV->SetString("message", "");
+			}
+		}
+		else
+		{
+			pMenuKV->SetString("message", "");
+		}
 	}
 
 	return pMenuKV;
@@ -444,7 +461,7 @@ CUtlVector<CEntityKeyValues *> CMenu::GenerateKeyValues(CPlayerSlot aSlot, CKeyV
 	vecResult.AddToTail(bIncludeBackground ? GetAllocatedBackgroundKeyValues(aSlot, pAllocator) : nullptr);
 	vecResult.AddToTail(GetAllocatedInactiveKeyValues(aSlot, pAllocator, bIncludeBackground));
 	vecResult.AddToTail(GetAllocatedActiveKeyValues(aSlot, pAllocator, bIncludeBackground));
-	vecResult.AddToTail(GetAllocatedDisabledActiveKeyValues(aSlot, pAllocator, bIncludeBackground));
+	vecResult.AddToTail(nullptr);
 
 	return vecResult;
 }
