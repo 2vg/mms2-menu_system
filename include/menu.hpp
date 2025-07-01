@@ -173,6 +173,7 @@ public: // IMenu
 		virtual const char *GetText() const = 0; // Aka background text.
 		virtual const char *GetInactiveText() const = 0;
 		virtual const char *GetActiveText() const = 0;
+		virtual const char *GetDisabledActiveText() const = 0;
 		virtual void Clear() = 0;
 
 		virtual void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems) = 0; // Render a page.
@@ -200,6 +201,11 @@ public: // IMenu
 		}
 
 		const char *GetActiveText() const override
+		{
+			return "";
+		}
+
+		const char *GetDisabledActiveText() const override
 		{
 			return "";
 		}
@@ -240,12 +246,18 @@ public: // IMenu
 			return m_sActiveText.Get();
 		}
 
+		virtual const char *GetDisabledActiveText() const override
+		{
+			return m_sDisabledActiveText.Get();
+		}
+
 		void Clear() override
 		{
 			Base::Clear();
 
 			m_sInactiveText.Clear();
 			m_sActiveText.Clear();
+			m_sDisabledActiveText.Clear();
 		}
 
 		void Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, ItemPosition_t iStartPosition, uint8 nMaxItems) override;
@@ -253,6 +265,7 @@ public: // IMenu
 	private:
 		CBufferStringText m_sInactiveText;
 		CBufferStringText m_sActiveText;
+		CBufferStringText m_sDisabledActiveText;
 	};
 
 	static constexpr uint8 sm_nMaxItemsPerPage = MENU_DEFAULT_ITEMS_COUNT_PER_PAGE;
@@ -267,6 +280,7 @@ public: // Internal methods.
 	CEntityKeyValues *GetAllocatedBackgroundKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr); // Must be deleted.
 	CEntityKeyValues *GetAllocatedInactiveKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr, bool bDrawBackground = true); // Must be deleted.
 	CEntityKeyValues *GetAllocatedActiveKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr, bool bDrawBackground = true); // Must be deleted.
+	CEntityKeyValues *GetAllocatedDisabledActiveKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr, bool bDrawBackground = true); // Must be deleted.
 	CUtlVector<CEntityKeyValues *> GenerateKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr, bool bIncludeBackground = true); // Must be closed with `PurgeAndDeleteElements()`.
 	static Color CalculatePassiveColor(const Color &rgbaActive, const Color &rgbaInactive);
 
@@ -284,6 +298,11 @@ protected:
 	CEntityInstance *GetActiveEntity()
 	{
 		return GetActiveEntities()[MENU_ENTITY_ACTIVE_INDEX];
+	}
+
+	CEntityInstance *GetDisabledActiveEntity()
+	{
+		return GetActiveEntities()[MENU_ENTITY_DISABLED_ACTIVE_INDEX];
 	}
 
 protected:

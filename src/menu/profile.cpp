@@ -56,6 +56,11 @@ Menu::CProfile::CProfile::~CProfile()
 		delete m_pActiveColor;
 	}
 
+	if(m_pDisabledActiveColor)
+	{
+		delete m_pDisabledActiveColor;
+	}
+
 	if(m_pData)
 	{
 		delete m_pData;
@@ -82,6 +87,7 @@ bool Menu::CProfile::Load(CProfileSystem *pSystem, KeyValues3 *pData, ProfileLoa
 	m_pBackgroundColor = (pMember = pData->FindMember("background_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_pInactiveColor = (pMember = pData->FindMember("inactive_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_pActiveColor = (pMember = pData->FindMember("active_color")) ? new Color(pMember->GetColor()) : nullptr;
+	m_pDisabledActiveColor = (pMember = pData->FindMember("disabled_active_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_flBackgroundAwayUnits = pData->GetMemberFloat("background_away_units");
 	m_vecResources.AddToTail(pData->GetMemberString("background_material_name"));
 
@@ -296,6 +302,7 @@ void Menu::CProfile::RemoveStaticMembers(KeyValues3 *pData)
 	pData->RemoveMember("matrix_offset-previous");
 	pData->RemoveMember("inactive_color");
 	pData->RemoveMember("active_color");
+	pData->RemoveMember("disabled_active_color");
 	pData->RemoveMember("background_away_units");
 }
 
@@ -459,6 +466,24 @@ const Color *Menu::CProfile::GetActiveColor() const
 		for(const auto &pInherited : m_aMetadata.GetBaseline()) 
 		{
 			if(pResult = pInherited->GetActiveColor()) 
+			{
+				break;
+			}
+		}
+	}
+
+	return pResult;
+}
+
+const Color *Menu::CProfile::GetDisabledActiveColor() const
+{
+	const auto *pResult = m_pDisabledActiveColor;
+
+	if(!pResult)
+	{
+		for(const auto &pInherited : m_aMetadata.GetBaseline())
+		{
+			if(pResult = pInherited->GetDisabledActiveColor())
 			{
 				break;
 			}

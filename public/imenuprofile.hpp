@@ -117,14 +117,21 @@ public: // Abstract methods.
 
 	/**
 	 * @brief Gets the active color.
-	 * 
+	 *
 	 * @return Returns a pointer to active color.
 	 */
 	virtual const Color *GetActiveColor() const = 0;
 
 	/**
+	 * @brief Gets the disabled active color (for disabled items in active menus).
+	 *
+	 * @return Returns a pointer to disabled active color.
+	 */
+	virtual const Color *GetDisabledActiveColor() const = 0;
+
+	/**
 	 * @brief Gets the background away units.
-	 * 
+	 *
 	 * @return Returns a background away units value.
 	 */
 	virtual float GetBackgroundAwayUnits() const = 0;

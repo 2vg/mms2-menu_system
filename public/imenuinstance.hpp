@@ -50,6 +50,7 @@ enum MenuEntity_t : uint8
 	MENU_ENTITY_BACKGROUND_INDEX = 0,   ///< The background layer index.
 	MENU_ENTITY_INACTIVE_INDEX = 1,     ///< The inactive layer index.
 	MENU_ENTITY_ACTIVE_INDEX = 2,       ///< The active layer index.
+	MENU_ENTITY_DISABLED_ACTIVE_INDEX = 3, ///< The disabled active layer index.
 
 	MENU_MAX_ENTITIES,                  ///< Count of menu entities.
 };
