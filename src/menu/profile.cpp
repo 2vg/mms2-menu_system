@@ -56,6 +56,16 @@ Menu::CProfile::CProfile::~CProfile()
 		delete m_pActiveColor;
 	}
 
+	if(m_pTitleColor)
+	{
+		delete m_pTitleColor;
+	}
+
+	if(m_pDisabledColor)
+	{
+		delete m_pDisabledColor;
+	}
+
 	if(m_pData)
 	{
 		delete m_pData;
@@ -82,6 +92,8 @@ bool Menu::CProfile::Load(CProfileSystem *pSystem, KeyValues3 *pData, ProfileLoa
 	m_pBackgroundColor = (pMember = pData->FindMember("background_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_pInactiveColor = (pMember = pData->FindMember("inactive_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_pActiveColor = (pMember = pData->FindMember("active_color")) ? new Color(pMember->GetColor()) : nullptr;
+	m_pTitleColor = (pMember = pData->FindMember("title_color")) ? new Color(pMember->GetColor()) : nullptr;
+	m_pDisabledColor = (pMember = pData->FindMember("disabled_color")) ? new Color(pMember->GetColor()) : nullptr;
 	m_flBackgroundAwayUnits = pData->GetMemberFloat("background_away_units");
 	m_vecResources.AddToTail(pData->GetMemberString("background_material_name"));
 
@@ -296,6 +308,8 @@ void Menu::CProfile::RemoveStaticMembers(KeyValues3 *pData)
 	pData->RemoveMember("matrix_offset-previous");
 	pData->RemoveMember("inactive_color");
 	pData->RemoveMember("active_color");
+	pData->RemoveMember("title_color");
+	pData->RemoveMember("disabled_color");
 	pData->RemoveMember("background_away_units");
 }
 
@@ -459,6 +473,42 @@ const Color *Menu::CProfile::GetActiveColor() const
 		for(const auto &pInherited : m_aMetadata.GetBaseline()) 
 		{
 			if(pResult = pInherited->GetActiveColor()) 
+			{
+				break;
+			}
+		}
+	}
+
+	return pResult;
+}
+
+const Color *Menu::CProfile::GetTitleColor() const
+{
+	const auto *pResult = m_pTitleColor;
+
+	if(!pResult)
+	{
+		for(const auto &pInherited : m_aMetadata.GetBaseline())
+		{
+			if(pResult = pInherited->GetTitleColor())
+			{
+				break;
+			}
+		}
+	}
+
+	return pResult;
+}
+
+const Color *Menu::CProfile::GetDisabledColor() const
+{
+	const auto *pResult = m_pDisabledColor;
+
+	if(!pResult)
+	{
+		for(const auto &pInherited : m_aMetadata.GetBaseline())
+		{
+			if(pResult = pInherited->GetDisabledColor())
 			{
 				break;
 			}

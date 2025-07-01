@@ -267,6 +267,8 @@ public: // Internal methods.
 	CEntityKeyValues *GetAllocatedBackgroundKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr); // Must be deleted.
 	CEntityKeyValues *GetAllocatedInactiveKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr, bool bDrawBackground = true); // Must be deleted.
 	CEntityKeyValues *GetAllocatedActiveKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr, bool bDrawBackground = true); // Must be deleted.
+	CEntityKeyValues *GetAllocatedTitleKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr, bool bDrawBackground = true); // Must be deleted.
+	CEntityKeyValues *GetAllocatedDisabledKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr, bool bDrawBackground = true); // Must be deleted.
 	CUtlVector<CEntityKeyValues *> GenerateKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator = nullptr, bool bIncludeBackground = true); // Must be closed with `PurgeAndDeleteElements()`.
 	static Color CalculatePassiveColor(const Color &rgbaActive, const Color &rgbaInactive);
 

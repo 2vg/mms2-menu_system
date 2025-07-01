@@ -123,8 +123,22 @@ public: // Abstract methods.
 	virtual const Color *GetActiveColor() const = 0;
 
 	/**
+	 * @brief Gets the title color.
+	 *
+	 * @return Returns a pointer to title color.
+	 */
+	virtual const Color *GetTitleColor() const = 0;
+
+	/**
+	 * @brief Gets the disabled color.
+	 *
+	 * @return Returns a pointer to disabled color.
+	 */
+	virtual const Color *GetDisabledColor() const = 0;
+
+	/**
 	 * @brief Gets the background away units.
-	 * 
+	 *
 	 * @return Returns a background away units value.
 	 */
 	virtual float GetBackgroundAwayUnits() const = 0;

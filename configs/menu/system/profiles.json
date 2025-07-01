@@ -54,8 +54,10 @@
 
 		"inherits": ["menu_controller", "annotation_background_base"],
 
-		"inactive_color": "233 208 173 255",
+		"inactive_color": "233 208 173 20",
 		"active_color": "255 167 42 255",
+		"title_color": "255 167 42 255",
+		"disabled_color": "233 208 173 255",
 
 		"enabled": true,
 		"fullbright": true,

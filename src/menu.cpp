@@ -326,15 +326,24 @@ CEntityKeyValues *CMenu::GetAllocatedBackgroundKeyValues(CPlayerSlot aSlot, CKey
 		}
 		else
 		{
-			const Color *pInactiveColor = pProfile->GetInactiveColor(), 
-			            *pActiveColor = pProfile->GetActiveColor();
-	
-			if(pInactiveColor && pActiveColor)
+			// Check if we should use title color for the background text (which includes title)
+			const Color *pTitleColor = pProfile->GetTitleColor();
+			
+			if(pTitleColor)
 			{
-				pMenuKV->SetColor("color", CalculatePassiveColor(*pInactiveColor, *pActiveColor));
+				pMenuKV->SetColor("color", *pTitleColor);
+			}
+			else
+			{
+				const Color *pInactiveColor = pProfile->GetInactiveColor(),
+				            *pActiveColor = pProfile->GetActiveColor();
+		
+				if(pInactiveColor && pActiveColor)
+				{
+					pMenuKV->SetColor("color", CalculatePassiveColor(*pInactiveColor, *pActiveColor));
+				}
 			}
 		}
-
 
 		pMenuKV->SetString("message", GetCurrentPage(aSlot)->GetText());
 	}
@@ -352,11 +361,16 @@ CEntityKeyValues *CMenu::GetAllocatedInactiveKeyValues(CPlayerSlot aSlot, CKeyVa
 
 	if(pMenuKV)
 	{
+		// Check if we should use disabled color for inactive items
+		const Color *pDisabledColor = pProfile->GetDisabledColor();
 		const Color *pInactiveColor = pProfile->GetInactiveColor();
+		
+		// Use disabled color if available, otherwise fall back to inactive color
+		const Color *pColorToUse = pDisabledColor ? pDisabledColor : pInactiveColor;
 
-		if(pInactiveColor)
+		if(pColorToUse)
 		{
-			pMenuKV->SetColor("color", *pInactiveColor);
+			pMenuKV->SetColor("color", *pColorToUse);
 		}
 
 		if(bDrawBackground)
@@ -393,6 +407,90 @@ CEntityKeyValues *CMenu::GetAllocatedActiveKeyValues(CPlayerSlot aSlot, CKeyValu
 		}
 
 		pMenuKV->SetString("message", GetCurrentPage(aSlot)->GetActiveText());
+	}
+
+	return pMenuKV;
+}
+
+CEntityKeyValues *CMenu::GetAllocatedTitleKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator, bool bDrawBackground)
+{
+	const IMenuProfile *pProfile = m_pProfile;
+
+	Assert(pProfile);
+
+	CEntityKeyValues *pMenuKV = pProfile->GetAllocactedEntityKeyValues(pAllocator);
+
+	if(pMenuKV)
+	{
+		const Color *pTitleColor = pProfile->GetTitleColor();
+
+		if(pTitleColor)
+		{
+			pMenuKV->SetColor("color", *pTitleColor);
+		}
+		else
+		{
+			// Fallback to inactive color if title color is not set
+			const Color *pInactiveColor = pProfile->GetInactiveColor();
+			if(pInactiveColor)
+			{
+				pMenuKV->SetColor("color", *pInactiveColor);
+			}
+		}
+
+		if(bDrawBackground)
+		{
+			pMenuKV->SetString("background_material_name", MENU_EMPTY_BACKGROUND_MATERIAL_NAME);
+		}
+
+		// Set title text only
+		auto *pCurrentPage = GetCurrentPage(aSlot);
+		if(pCurrentPage)
+		{
+			pMenuKV->SetString("message", pCurrentPage->GetText());
+		}
+	}
+
+	return pMenuKV;
+}
+
+CEntityKeyValues *CMenu::GetAllocatedDisabledKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator, bool bDrawBackground)
+{
+	const IMenuProfile *pProfile = m_pProfile;
+
+	Assert(pProfile);
+
+	CEntityKeyValues *pMenuKV = pProfile->GetAllocactedEntityKeyValues(pAllocator);
+
+	if(pMenuKV)
+	{
+		const Color *pDisabledColor = pProfile->GetDisabledColor();
+
+		if(pDisabledColor)
+		{
+			pMenuKV->SetColor("color", *pDisabledColor);
+		}
+		else
+		{
+			// Fallback to inactive color if disabled color is not set
+			const Color *pInactiveColor = pProfile->GetInactiveColor();
+			if(pInactiveColor)
+			{
+				pMenuKV->SetColor("color", *pInactiveColor);
+			}
+		}
+
+		if(bDrawBackground)
+		{
+			pMenuKV->SetString("background_material_name", MENU_EMPTY_BACKGROUND_MATERIAL_NAME);
+		}
+
+		// Set disabled items text
+		auto *pCurrentPage = GetCurrentPage(aSlot);
+		if(pCurrentPage)
+		{
+			pMenuKV->SetString("message", pCurrentPage->GetInactiveText());
+		}
 	}
 
 	return pMenuKV;

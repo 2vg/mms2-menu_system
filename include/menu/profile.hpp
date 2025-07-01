@@ -99,6 +99,8 @@ namespace Menu
 		Color *m_pBackgroundColor = nullptr; // "background_color"
 		Color *m_pInactiveColor = nullptr; // "inactive_color"
 		Color *m_pActiveColor = nullptr; // "active_color"
+		Color *m_pTitleColor = nullptr; // "title_color"
+		Color *m_pDisabledColor = nullptr; // "disabled_color"
 
 		float m_flBackgroundAwayUnits = 0.f; // "background_away_units"
 
@@ -169,6 +171,8 @@ namespace Menu
 		const Color *GetBackgroundColor() const override;
 		const Color *GetInactiveColor() const override;
 		const Color *GetActiveColor() const override;
+		const Color *GetTitleColor() const override;
+		const Color *GetDisabledColor() const override;
 		float GetBackgroundAwayUnits() const override;
 		CUtlVector<const char *> GetResources() const override;
 		CEntityKeyValues *GetAllocactedEntityKeyValues(CKeyValues3Context *pAllocator = nullptr, bool bIncludeBackground = true) const override;
