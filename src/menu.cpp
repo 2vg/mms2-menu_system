@@ -407,9 +407,22 @@ CEntityKeyValues *CMenu::GetAllocatedDisabledActiveKeyValues(CPlayerSlot aSlot, 
 
 	CEntityKeyValues *pMenuKV = pProfile->GetAllocactedEntityKeyValues(pAllocator);
 
+	DevMsg("GetAllocatedDisabledActiveKeyValues: pProfile=%p, pMenuKV=%p\n", pProfile, pMenuKV);
+
+	if(!pMenuKV)
+	{
+		pMenuKV = new CEntityKeyValues(pAllocator, pAllocator ? EKV_ALLOCATOR_EXTERNAL : EKV_ALLOCATOR_NORMAL);
+		DevMsg("GetAllocatedDisabledActiveKeyValues: Created new pMenuKV=%p\n", pMenuKV);
+
+		pMenuKV->SetString("classname", "point_worldtext");
+		pMenuKV->SetString("targetname", "");
+	}
+
 	if(pMenuKV)
 	{
 		const Color *pDisabledActiveColor = pProfile->GetDisabledActiveColor();
+
+		DevMsg("GetAllocatedDisabledActiveKeyValues: pDisabledActiveColor=%p\n", pDisabledActiveColor);
 
 		if(pDisabledActiveColor)
 		{
@@ -430,21 +443,34 @@ CEntityKeyValues *CMenu::GetAllocatedDisabledActiveKeyValues(CPlayerSlot aSlot, 
 		}
 
 		const IPage *pCurrentPage = GetCurrentPage(aSlot);
+		DevMsg("GetAllocatedDisabledActiveKeyValues: pCurrentPage=%p\n", pCurrentPage);
+		
 		if(pCurrentPage)
 		{
 			const char *pszDisabledActiveText = pCurrentPage->GetDisabledActiveText();
+			DevMsg("GetAllocatedDisabledActiveKeyValues: pszDisabledActiveText=%p ('%s')\n",
+				pszDisabledActiveText, pszDisabledActiveText ? pszDisabledActiveText : "null");
+				
 			if(pszDisabledActiveText && *pszDisabledActiveText)
 			{
 				pMenuKV->SetString("message", pszDisabledActiveText);
 			}
 			else
 			{
-				pMenuKV->SetString("message", "");
+				const char *pszInactiveText = pCurrentPage->GetInactiveText();
+				if(pszInactiveText && *pszInactiveText)
+				{
+					pMenuKV->SetString("message", pszInactiveText);
+				}
+				else
+				{
+					pMenuKV->SetString("message", " ");
+				}
 			}
 		}
 		else
 		{
-			pMenuKV->SetString("message", "");
+			pMenuKV->SetString("message", " ");
 		}
 	}
 
@@ -457,10 +483,18 @@ CUtlVector<CEntityKeyValues *> CMenu::GenerateKeyValues(CPlayerSlot aSlot, CKeyV
 
 	CUtlVector<CEntityKeyValues *> vecResult(MENU_MAX_ENTITIES);
 
-	vecResult.AddToTail(bIncludeBackground ? GetAllocatedBackgroundKeyValues(aSlot, pAllocator) : nullptr);
-	vecResult.AddToTail(GetAllocatedInactiveKeyValues(aSlot, pAllocator, bIncludeBackground));
-	vecResult.AddToTail(GetAllocatedActiveKeyValues(aSlot, pAllocator, bIncludeBackground));
-	vecResult.AddToTail(GetAllocatedDisabledActiveKeyValues(aSlot, pAllocator, bIncludeBackground));
+	auto *pBackgroundKV = bIncludeBackground ? GetAllocatedBackgroundKeyValues(aSlot, pAllocator) : nullptr;
+	auto *pInactiveKV = GetAllocatedInactiveKeyValues(aSlot, pAllocator, bIncludeBackground);
+	auto *pActiveKV = GetAllocatedActiveKeyValues(aSlot, pAllocator, bIncludeBackground);
+	auto *pDisabledActiveKV = GetAllocatedDisabledActiveKeyValues(aSlot, pAllocator, bIncludeBackground);
+
+	DevMsg("GenerateKeyValues: Background=%p, Inactive=%p, Active=%p, DisabledActive=%p\n",
+		pBackgroundKV, pInactiveKV, pActiveKV, pDisabledActiveKV);
+
+	vecResult.AddToTail(pBackgroundKV);
+	vecResult.AddToTail(pInactiveKV);
+	vecResult.AddToTail(pActiveKV);
+	vecResult.AddToTail(pDisabledActiveKV);
 
 	return vecResult;
 }
