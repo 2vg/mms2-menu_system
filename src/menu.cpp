@@ -286,7 +286,7 @@ bool CMenu::OnSelect(CPlayerSlot aSlot, int iSlectedItem, DisplayFlags_t eFlags)
 	{
 		auto &aItem = vecItems[iTargetItem];
 
-		if (!(aItem.GetStyle() & IMenu::MENU_ITEM_ACTIVE))
+		if (!(aItem.GetStyle() & IMenu::MENU_ITEM_ACTIVE) || (aItem.GetStyle() & IMenu::MENU_ITEM_DISABLED))
 		{
 			return false;
 		}
@@ -407,12 +407,9 @@ CEntityKeyValues *CMenu::GetAllocatedDisabledActiveKeyValues(CPlayerSlot aSlot, 
 
 	CEntityKeyValues *pMenuKV = pProfile->GetAllocactedEntityKeyValues(pAllocator);
 
-	DevMsg("GetAllocatedDisabledActiveKeyValues: pProfile=%p, pMenuKV=%p\n", pProfile, pMenuKV);
-
 	if(!pMenuKV)
 	{
 		pMenuKV = new CEntityKeyValues(pAllocator, pAllocator ? EKV_ALLOCATOR_EXTERNAL : EKV_ALLOCATOR_NORMAL);
-		DevMsg("GetAllocatedDisabledActiveKeyValues: Created new pMenuKV=%p\n", pMenuKV);
 
 		pMenuKV->SetString("classname", "point_worldtext");
 		pMenuKV->SetString("targetname", "");
@@ -421,8 +418,6 @@ CEntityKeyValues *CMenu::GetAllocatedDisabledActiveKeyValues(CPlayerSlot aSlot, 
 	if(pMenuKV)
 	{
 		const Color *pDisabledActiveColor = pProfile->GetDisabledActiveColor();
-
-		DevMsg("GetAllocatedDisabledActiveKeyValues: pDisabledActiveColor=%p\n", pDisabledActiveColor);
 
 		if(pDisabledActiveColor)
 		{
@@ -443,13 +438,10 @@ CEntityKeyValues *CMenu::GetAllocatedDisabledActiveKeyValues(CPlayerSlot aSlot, 
 		}
 
 		const IPage *pCurrentPage = GetCurrentPage(aSlot);
-		DevMsg("GetAllocatedDisabledActiveKeyValues: pCurrentPage=%p\n", pCurrentPage);
 		
 		if(pCurrentPage)
 		{
 			const char *pszDisabledActiveText = pCurrentPage->GetDisabledActiveText();
-			DevMsg("GetAllocatedDisabledActiveKeyValues: pszDisabledActiveText=%p ('%s')\n",
-				pszDisabledActiveText, pszDisabledActiveText ? pszDisabledActiveText : "null");
 				
 			if(pszDisabledActiveText && *pszDisabledActiveText)
 			{
@@ -464,13 +456,13 @@ CEntityKeyValues *CMenu::GetAllocatedDisabledActiveKeyValues(CPlayerSlot aSlot, 
 				}
 				else
 				{
-					pMenuKV->SetString("message", " ");
+					pMenuKV->SetString("message", "_");
 				}
 			}
 		}
 		else
 		{
-			pMenuKV->SetString("message", " ");
+			pMenuKV->SetString("message", "_");
 		}
 	}
 
@@ -487,9 +479,6 @@ CUtlVector<CEntityKeyValues *> CMenu::GenerateKeyValues(CPlayerSlot aSlot, CKeyV
 	auto *pInactiveKV = GetAllocatedInactiveKeyValues(aSlot, pAllocator, bIncludeBackground);
 	auto *pActiveKV = GetAllocatedActiveKeyValues(aSlot, pAllocator, bIncludeBackground);
 	auto *pDisabledActiveKV = GetAllocatedDisabledActiveKeyValues(aSlot, pAllocator, bIncludeBackground);
-
-	DevMsg("GenerateKeyValues: Background=%p, Inactive=%p, Active=%p, DisabledActive=%p\n",
-		pBackgroundKV, pInactiveKV, pActiveKV, pDisabledActiveKV);
 
 	vecResult.AddToTail(pBackgroundKV);
 	vecResult.AddToTail(pInactiveKV);
@@ -776,7 +765,13 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 				szItemNumber[0] = '1' + (i - iStartPosition);
 				aConcat.AppendToBuffer(m_sText, szItemNumber, pszItemContent);
 
-				if(eItemStyle & MENU_ITEM_ACTIVE)
+				if(eItemStyle & MENU_ITEM_DISABLED)
+				{
+					aConcat.AppendEndsToBuffer(m_sInactiveText);
+					aConcat.AppendEndsToBuffer(m_sActiveText);
+					aConcat.AppendToBuffer(m_sDisabledActiveText, szItemNumber, pszItemContent);
+				}
+				else if(eItemStyle & MENU_ITEM_ACTIVE)
 				{
 					aConcat.AppendEndsToBuffer(m_sInactiveText);
 					aConcat.AppendToBuffer(m_sActiveText, szItemNumber, pszItemContent);
@@ -784,16 +779,22 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 				}
 				else
 				{
-					aConcat.AppendEndsToBuffer(m_sInactiveText);
+					aConcat.AppendToBuffer(m_sInactiveText, szItemNumber, pszItemContent);
 					aConcat.AppendEndsToBuffer(m_sActiveText);
-					aConcat.AppendToBuffer(m_sDisabledActiveText, szItemNumber, pszItemContent);
+					aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
 				}
 			}
 			else
 			{
 				aConcat.AppendToBuffer(m_sText, pszItemContent);
 
-				if(eItemStyle & MENU_ITEM_ACTIVE)
+				if(eItemStyle & MENU_ITEM_DISABLED)
+				{
+					aConcat.AppendEndsToBuffer(m_sInactiveText);
+					aConcat.AppendEndsToBuffer(m_sActiveText);
+					aConcat.AppendToBuffer(m_sDisabledActiveText, pszItemContent);
+				}
+				else if(eItemStyle & MENU_ITEM_ACTIVE)
 				{
 					aConcat.AppendEndsToBuffer(m_sInactiveText);
 					aConcat.AppendToBuffer(m_sActiveText, pszItemContent);
@@ -801,9 +802,9 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 				}
 				else
 				{
-					aConcat.AppendEndsToBuffer(m_sInactiveText);
+					aConcat.AppendToBuffer(m_sInactiveText, pszItemContent);
 					aConcat.AppendEndsToBuffer(m_sActiveText);
-					aConcat.AppendToBuffer(m_sDisabledActiveText, pszItemContent);
+					aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
 				}
 			}
 		}
@@ -866,7 +867,21 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 						aConcat.AppendToBuffer(m_sText, szItemNumber, pszItemContent);
 					}
 
-					if(eItemStyle & MENU_ITEM_ACTIVE)
+					if(eItemStyle & MENU_ITEM_DISABLED)
+					{
+						aConcat.AppendEndsToBuffer(m_sInactiveText);
+						aConcat.AppendEndsToBuffer(m_sActiveText);
+
+						if(bSkipControlItem)
+						{
+							aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
+						}
+						else
+						{
+							aConcat.AppendToBuffer(m_sDisabledActiveText, szItemNumber, pszItemContent);
+						}
+					}
+					else if(eItemStyle & MENU_ITEM_ACTIVE)
 					{
 						aConcat.AppendEndsToBuffer(m_sInactiveText);
 
@@ -883,6 +898,24 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 					}
 					else
 					{
+						if(bSkipControlItem)
+						{
+							aConcat.AppendEndsToBuffer(m_sInactiveText);
+						}
+						else
+						{
+							aConcat.AppendToBuffer(m_sInactiveText, szItemNumber, pszItemContent);
+						}
+						aConcat.AppendEndsToBuffer(m_sActiveText);
+						aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
+					}
+				}
+				else
+				{
+					aConcat.AppendToBuffer(m_sText, pszItemContent);
+
+					if(eItemStyle & MENU_ITEM_DISABLED)
+					{
 						aConcat.AppendEndsToBuffer(m_sInactiveText);
 						aConcat.AppendEndsToBuffer(m_sActiveText);
 
@@ -892,15 +925,10 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 						}
 						else
 						{
-							aConcat.AppendToBuffer(m_sDisabledActiveText, szItemNumber, pszItemContent);
+							aConcat.AppendToBuffer(m_sDisabledActiveText, pszItemContent);
 						}
 					}
-				}
-				else
-				{
-					aConcat.AppendToBuffer(m_sText, pszItemContent);
-
-					if(eItemStyle & MENU_ITEM_ACTIVE)
+					else if(eItemStyle & MENU_ITEM_ACTIVE)
 					{
 						aConcat.AppendEndsToBuffer(m_sInactiveText);
 
@@ -917,17 +945,16 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 					}
 					else
 					{
-						aConcat.AppendEndsToBuffer(m_sInactiveText);
-						aConcat.AppendEndsToBuffer(m_sActiveText);
-
 						if(bSkipControlItem)
 						{
-							aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
+							aConcat.AppendEndsToBuffer(m_sInactiveText);
 						}
 						else
 						{
-							aConcat.AppendToBuffer(m_sDisabledActiveText, pszItemContent);
+							aConcat.AppendToBuffer(m_sInactiveText, pszItemContent);
 						}
+						aConcat.AppendEndsToBuffer(m_sActiveText);
+						aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
 					}
 				}
 			}

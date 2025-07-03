@@ -63,9 +63,11 @@ public: // The definitions.
 		MENU_ITEM_ACTIVE =      (1 << 0),       ///< Item is drawn selectable.
 		MENU_ITEM_HASNUMBER =   (1 << 1),       ///< Item has number.
 		MENU_ITEM_CONTROL =     (1 << 2),       ///< Item is control text (back/next/exit).
+		MENU_ITEM_DISABLED =    (1 << 3),       ///< Item is disabled (not selectable, shown with disabled color).
 
 		MENU_ITEM_DEFAULT =     (MENU_ITEM_ACTIVE | MENU_ITEM_HASNUMBER),   ///< Item should be drawn normally.
 		MENU_ITEM_FULL =        (MENU_ITEM_DEFAULT | MENU_ITEM_CONTROL),    ///< Control item should be drawn normally
+		MENU_ITEM_DISABLED_TEXT = (MENU_ITEM_HASNUMBER | MENU_ITEM_DISABLED), ///< Disabled item with number but not selectable.
 	};
 
 	/**
