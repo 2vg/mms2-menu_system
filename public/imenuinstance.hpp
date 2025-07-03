@@ -52,7 +52,7 @@ enum MenuEntity_t : uint8
 	MENU_ENTITY_ACTIVE_INDEX = 2,       ///< The active layer index.
 	MENU_ENTITY_DISABLED_ACTIVE_INDEX = 3, ///< The disabled active layer index.
 
-	MENU_MAX_ENTITIES = 3,              ///< Count of menu entities (temporarily set to 3 for testing).
+	MENU_MAX_ENTITIES = 4,              ///< Count of menu entities (includes disabled active entity).
 };
 
 /**

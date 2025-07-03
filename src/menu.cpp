@@ -203,8 +203,7 @@ bool CMenu::InternalDisplayAt(CPlayerSlot aSlot, ItemPosition_t iStartItem, Disp
 		InternalSetMessage(MENU_ENTITY_BACKGROUND_INDEX, pPage->GetText());
 		InternalSetMessage(MENU_ENTITY_INACTIVE_INDEX, pPage->GetInactiveText());
 		InternalSetMessage(MENU_ENTITY_ACTIVE_INDEX, pPage->GetActiveText());
-		// 一時的にDisabledActiveエンティティへのアクセスを無効化
-		// InternalSetMessage(MENU_ENTITY_DISABLED_ACTIVE_INDEX, pPage->GetDisabledActiveText());
+		InternalSetMessage(MENU_ENTITY_DISABLED_ACTIVE_INDEX, pPage->GetDisabledActiveText());
 	}
 
 	return true;
@@ -461,7 +460,7 @@ CUtlVector<CEntityKeyValues *> CMenu::GenerateKeyValues(CPlayerSlot aSlot, CKeyV
 	vecResult.AddToTail(bIncludeBackground ? GetAllocatedBackgroundKeyValues(aSlot, pAllocator) : nullptr);
 	vecResult.AddToTail(GetAllocatedInactiveKeyValues(aSlot, pAllocator, bIncludeBackground));
 	vecResult.AddToTail(GetAllocatedActiveKeyValues(aSlot, pAllocator, bIncludeBackground));
-	vecResult.AddToTail(nullptr);
+	vecResult.AddToTail(GetAllocatedDisabledActiveKeyValues(aSlot, pAllocator, bIncludeBackground));
 
 	return vecResult;
 }

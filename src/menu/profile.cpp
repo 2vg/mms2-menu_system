@@ -300,6 +300,7 @@ void Menu::CProfile::RemoveStaticMembers(KeyValues3 *pData)
 	pData->RemoveMember("items_verification_client_convar_name");
 	pData->RemoveMember("matrix_offset");
 	pData->RemoveMember("matrix_offset-previous");
+	pData->RemoveMember("background_color");
 	pData->RemoveMember("inactive_color");
 	pData->RemoveMember("active_color");
 	pData->RemoveMember("disabled_active_color");
