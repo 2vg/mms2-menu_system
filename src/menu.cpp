@@ -863,34 +863,6 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 						{
 							aConcat.AppendEndsToBuffer(m_sInactiveText);
 						}
-						
-						CEntityKeyValues *CMenu::GetAllocatedDisabledActiveKeyValues(CPlayerSlot aSlot, CKeyValues3Context *pAllocator, bool bDrawBackground)
-						{
-							const IMenuProfile *pProfile = m_pProfile;
-						
-							Assert(pProfile);
-						
-							CEntityKeyValues *pMenuKV = pProfile->GetAllocactedEntityKeyValues(pAllocator);
-						
-							if(pMenuKV)
-							{
-								const Color *pColor = pProfile->GetDisabledActiveColor();
-						
-								if(pColor)
-								{
-									pMenuKV->SetColor("color", *pColor);
-								}
-						
-								if(bDrawBackground)
-								{
-									pMenuKV->SetString("background_material_name", MENU_EMPTY_BACKGROUND_MATERIAL_NAME); // To align with the background.
-								}
-						
-								pMenuKV->SetString("message", GetCurrentPage(aSlot)->GetDisabledActiveText());
-							}
-						
-							return pMenuKV;
-						}
 						else
 						{
 							aConcat.AppendToBuffer(m_sInactiveText, pszItemContent);
@@ -903,4 +875,4 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 			}
 		}
 	}
-	}
+}
