@@ -123,6 +123,13 @@ public: // Abstract methods.
 	virtual const Color *GetActiveColor() const = 0;
 
 	/**
+	 * @brief Gets the disabled active color.
+	 *
+	 * @return Returns a pointer to disabled active color.
+	 */
+	virtual const Color *GetDisabledActiveColor() const = 0;
+
+	/**
 	 * @brief Gets the background away units.
 	 * 
 	 * @return Returns a background away units value.
