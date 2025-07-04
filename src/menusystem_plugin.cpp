@@ -3068,7 +3068,68 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 			{
 				pszArg1++; // Skip a command character.
 
-				// Call the handler.
+				// Check for menu selection commands (1-9)
+				if(pszArg1[0] >= '1' && pszArg1[0] <= '9' && (pszArg1[1] == '\0' || pszArg1[1] == ' '))
+				{
+					int iMenuSelection = pszArg1[0] - '0';
+					
+					if(CLogger::IsChannelEnabled(LV_DETAILED))
+					{
+						CLogger::DetailedFormat("Menu selection via chat command: %d (silent: %s)\n", iMenuSelection, bIsSilent ? "true" : "false");
+					}
+
+					// Print a chat message before if not silent.
+					if(!bIsSilent && g_pCVar)
+					{
+						SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
+					}
+
+					// Call menu selection directly
+					if(aPlayerSlot.IsValid())
+					{
+						auto &aPlayer = GetPlayerData(aPlayerSlot);
+
+						if(aPlayer.IsConnected())
+						{
+							auto &vecMenus = aPlayer.GetMenus();
+
+							if(vecMenus.Count())
+							{
+								IMenu::Index_t iActiveMenu = aPlayer.GetActiveMenuIndex();
+
+								if(iActiveMenu == MENU_INVLID_INDEX)
+								{
+									FOR_EACH_VEC(vecMenus, i)
+									{
+										const auto &[_, pMenu] = vecMenus.Element(i);
+
+										CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+										if(pInternalMenu)
+										{
+											pInternalMenu->OnSelect(aPlayerSlot, iMenuSelection, IMenu::MENU_DISPLAY_DEFAULT);
+											break;
+										}
+									}
+								}
+								else
+								{
+									CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(vecMenus[iActiveMenu].m_pInstance);
+
+									if(pInternalMenu)
+									{
+										pInternalMenu->OnSelect(aPlayerSlot, iMenuSelection, IMenu::MENU_DISPLAY_DEFAULT);
+									}
+								}
+							}
+						}
+					}
+
+					// no return
+					// cuz other frameworks may use this command so we should not block them
+					//RETURN_META(MRES_SUPERCEDE);
+				}
+
 				{
 					size_t nArg1Length = 0;
 
@@ -3089,8 +3150,8 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 
 					if(CLogger::IsChannelEnabled(LV_DETAILED))
 					{
-						const auto &aConcat = g_aEmbedConcat, 
-						           &aConcat2 = g_aEmbed2Concat, 
+						const auto &aConcat = g_aEmbedConcat,
+						           &aConcat2 = g_aEmbed2Concat,
 						           &aConcat3 = g_aEmbed3Concat;
 
 						CBufferStringN<1024> sBuffer;
