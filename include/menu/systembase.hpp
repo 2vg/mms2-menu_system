@@ -27,8 +27,10 @@
 #	include <functional>
 #	include <memory>
 
+#	include <tier0/platform.h>
 #	include <tier1/utlmap.h>
 #	include <tier1/utlsymbollarge.h>
+#	include <tier1/smartptr.h>
 
 #	include <logger.hpp>
 
@@ -53,81 +55,48 @@ namespace Menu
 		{
 		}
 
+		using Index_t = uint16;
 		using OnCallback_t = std::function<bool (const CUtlSymbolLarge &, Args...)>;
-		using OnCallbackShared_t = std::shared_ptr<OnCallback_t>;
-
-		class SharedCallback
-		{
-		public:
-			SharedCallback()
-			 :  m_pCallback(std::make_shared<OnCallback_t>(nullptr))
-			{
-			}
-
-			SharedCallback(const OnCallbackShared_t &funcSharedCallback)
-			 :  m_pCallback(funcSharedCallback)
-			{
-			}
-
-			SharedCallback(const OnCallback_t &funcCallback)
-			 :  m_pCallback(std::make_shared<OnCallback_t>(funcCallback))
-			{
-			}
-
-			operator OnCallbackShared_t() const
-			{
-				return m_pCallback;
-			}
-
-			operator OnCallback_t() const
-			{
-				return *m_pCallback;
-			}
-
-		private:
-			OnCallbackShared_t m_pCallback;
-		}; // Menu::CSystemBase::SharedCallback
+		using SmartCallback_t = CSmartPtr<OnCallback_t, CNullRefCountAccessor>;
 
 	public: // ISystemBase
-		virtual const char *GetName()
-		{
-			return "Menu - Base System";
-		}
-
-		virtual const char *GetHandlerLowercaseName()
-		{
-			return "";
-		}
+		virtual const char *GetName() { return "Menu - Base System"; }
+		virtual const char *GetHandlerLowercaseName() { return ""; }
 
 	public:
-		bool AddHandler(const char *pszName, const SharedCallback &fnCallback)
-		{
-			return m_mapCallbacks.Insert(GetSymbol(pszName), fnCallback) != m_mapCallbacks.InvalidIndex();
-		}
+		bool IsValidHandler(Index_t idx) { return m_mapCallbacks.InvalidIndex() != idx; }
+		Index_t AddHandler(const char *pszName, SmartCallback_t &&fnCallback) { return m_mapCallbacks.Insert(GetSymbol(pszName), Move(fnCallback)); }
+		bool RemoveHandler(Index_t idx) { return m_mapCallbacks.RemoveAt(idx); }
+		void RemoveAllHandlers() { m_mapCallbacks.Purge(); }
 
-		bool RemoveHandler(const char *pszName)
-		{
-			return m_mapCallbacks.Remove(FindSymbol(pszName));
-		}
-
-		void RemoveAllHandlers()
-		{
-			m_mapCallbacks.Purge();
-		}
-
-	protected:
-		virtual bool Handle(const char *pszName, Args... args)
+	public:
+		Index_t FindHandler(const char *pszName)
 		{
 			CUtlSymbolLarge sName = FindSymbol(pszName);
 
 			if(!sName.IsValid())
 			{
-				return false;
+				return m_mapCallbacks.InvalidIndex();
 			}
 
-			auto iFound = m_mapCallbacks.Find(sName);
+			return m_mapCallbacks.Find(sName);
+		}
 
-			if(iFound == m_mapCallbacks.InvalidIndex())
+		bool Call(Index_t iHandler, const char *pszName, Args... args)
+		{
+			Assert(IsValidHandler(iHandler));
+
+			const SmartCallback_t &it = m_mapCallbacks[iHandler];
+
+			return (*it)(pszName, args...);
+		}
+
+	protected:
+		virtual bool Handle(const char *pszName, Args... args)
+		{
+			Index_t iHandler = FindHandler(pszName);
+
+			if(!IsValidHandler(iHandler))
 			{
 				return false;
 			}
@@ -137,27 +106,18 @@ namespace Menu
 				CLogger::DetailedFormat("Handling \"%s\" %s...\n", pszName, GetHandlerLowercaseName());
 			}
 
-			OnCallback_t it = m_mapCallbacks[iFound];
-
-			return it(pszName, args...);
+			return Call(iHandler, pszName, args...);
 		}
 
 	protected:
-		CUtlSymbolLarge GetSymbol(const char *pszText)
-		{
-			return m_aSymbolTable.AddString(pszText);
-		}
-
-		CUtlSymbolLarge FindSymbol(const char *pszText) const
-		{
-			return m_aSymbolTable.Find(pszText);
-		}
+		CUtlSymbolLarge GetSymbol(const char *pszText) { return m_aSymbolTable.AddString(pszText); }
+		CUtlSymbolLarge FindSymbol(const char *pszText) const { return m_aSymbolTable.Find(pszText); }
 
 	private:
 		CUtlSymbolTableLarge_CI m_aSymbolTable;
 
 	protected:
-		CUtlMap<CUtlSymbolLarge, SharedCallback> m_mapCallbacks;
+		CUtlMap<CUtlSymbolLarge, SmartCallback_t, Index_t> m_mapCallbacks;
 	}; // Menu::CSystemBase<>
 }; // Menu
 

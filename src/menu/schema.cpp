@@ -133,14 +133,14 @@ void Menu::Schema::CSystem::CDetailsConcatBase::AppendEmpty()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	pMessages->AddToTail({pConcat->GetEnds()});
+	pMessages->AddToTail(CBufferStringN<8>(pConcat->GetEnds()));
 }
 
 void Menu::Schema::CSystem::CDetailsConcatTypeScope::AppendHeader()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CHugeBufferString sBuffer;
 
 	pConcat->AppendStringHeadToBuffer(sBuffer, m_pData->m_szScopeName);
 	pMessages->AddToTail(sBuffer);
@@ -150,7 +150,7 @@ void Menu::Schema::CSystem::CDetailsConcatTypeScope::AppendMembers()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CHugeBufferString sBuffer;
 
 	auto *pTypeScope = m_pData;
 
@@ -178,7 +178,7 @@ void Menu::Schema::CSystem::CDetailsConcatTypeScope::AppendClasses()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CTinyBufferString sBuffer;
 
 	pConcat->AppendToBuffer(sBuffer, "Classes");
 	pMessages->AddToTail(sBuffer);
@@ -188,7 +188,7 @@ void Menu::Schema::CSystem::CDetailsConcatType::AppendHeader()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CSmallBufferString sBuffer;
 
 	pConcat->AppendHeadToBuffer(sBuffer, "Type");
 	pMessages->AddToTail(sBuffer);
@@ -198,7 +198,7 @@ void Menu::Schema::CSystem::CDetailsConcatType::AppendMembers()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CHugeBufferString sBuffer;
 
 	auto *pType = m_pData;
 
@@ -230,7 +230,7 @@ void Menu::Schema::CSystem::CDetailsConcatClass::AppendHeader()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CSmallBufferString sBuffer;
 
 	pConcat->AppendStringHeadToBuffer(sBuffer, m_pData->m_pszName);
 	pMessages->AddToTail(sBuffer);
@@ -240,7 +240,7 @@ void Menu::Schema::CSystem::CDetailsConcatClass::AppendMembers()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CHugeBufferString sBuffer;
 
 	auto *pInfo = m_pData;
 
@@ -268,7 +268,7 @@ void Menu::Schema::CSystem::CDetailsConcatClass::AppendBaseClasses()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CSmallBufferString sBuffer;
 
 	pConcat->AppendToBuffer(sBuffer, "Base classes");
 	pMessages->AddToTail(sBuffer);
@@ -278,7 +278,7 @@ void Menu::Schema::CSystem::CDetailsConcatClass::AppendFields()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CSmallBufferString sBuffer;
 
 	pConcat->AppendToBuffer(sBuffer, "Fields");
 	pMessages->AddToTail(sBuffer);
@@ -288,7 +288,7 @@ void Menu::Schema::CSystem::CDetailsConcatField::AppendHeader()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CXLargeBufferString sBuffer;
 
 	pConcat->AppendStringHeadToBuffer(sBuffer, m_pData->m_pszName);
 	pMessages->AddToTail(sBuffer);
@@ -298,7 +298,7 @@ void Menu::Schema::CSystem::CDetailsConcatField::AppendMembers()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CTinyBufferString sBuffer;
 
 	pConcat->AppendToBuffer(sBuffer, "Offset", m_pData->m_nSingleInheritanceOffset);
 	pMessages->AddToTail(sBuffer);
@@ -308,7 +308,7 @@ void Menu::Schema::CSystem::CDetailsConcatField::AppendMetadataMember()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CHugeBufferString sBuffer;
 
 	pConcat->AppendToBuffer(sBuffer, "Metadata");
 	pMessages->AddToTail(sBuffer);
@@ -318,7 +318,7 @@ void Menu::Schema::CSystem::CDetailsConcatMetadataEntry::AppendHeader()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CHugeBufferString sBuffer;
 
 	if(m_pData->m_pData)
 	{
@@ -336,7 +336,7 @@ void Menu::Schema::CSystem::CDetailsConcatMetadataEntry::AppendMembers()
 {
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
-	CBufferStringVector::ElemType_t sBuffer;
+	CHugeBufferString sBuffer;
 
 	void *pData = m_pData->m_pData;
 
@@ -431,7 +431,7 @@ Menu::Schema::CSystem::CSystem()
 {
 }
 
-bool Menu::Schema::CSystem::Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, CBufferStringVector *pMessages)
+bool Menu::Schema::CSystem::Init(ISchemaSystem *pSchemaSystem, const CUtlVector<const char *> &vecLoadedLibraries, CStringVector *pMessages)
 {
 	CBufferStringN<1024> sBuffer;
 
@@ -447,9 +447,7 @@ bool Menu::Schema::CSystem::Init(ISchemaSystem *pSchemaSystem, const CUtlVector<
 		}
 		else if(pMessages)
 		{
-			const char *pszMessageConcat[] = {"Failed to ", "find \"", pszName, "\" library"};
-
-			pMessages->AddToTail(pszMessageConcat);
+			pMessages->AddToTail(CLargeBufferString({"Failed to ", "find \"", pszName, "\" library"}));
 		}
 	}
 
@@ -488,7 +486,7 @@ SchemaClassFieldData_t *Menu::Schema::CSystem::CClass::GetField(const CUtlSymbol
 
 void Menu::Schema::CSystem::CClass::SetField(const CUtlSymbolLarge &sName, SchemaClassFieldData_t *pData)
 {
-	m_aFieldStorage.Set(sName, pData);
+	m_aFieldStorage.Set(sName, Move(pData));
 }
 
 SchemaClassFieldData_t *Menu::Schema::CSystem::CClass::FindField(const char *pszName) const

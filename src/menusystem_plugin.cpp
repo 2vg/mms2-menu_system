@@ -52,12 +52,10 @@
 #include <tier1/convar.h>
 #include <mathlib/mathlib.h>
 
-#include <networkbasetypes.pb.h>
+#include <netmessages.h>
+#include <usermessages.h>
+// #include <cstrike15/usermessages.h>
 #include <connectionless_netmessages.pb.h>
-#include <usermessages.pb.h>
-// #include <cstrike15_usermessages.pb.h>
-
-#include <usercmd.pb.h>
 
 // <cstrike15/cs_shareddefs.h> BEGIN
 // CS Team IDs.
@@ -143,11 +141,11 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 
 	// Game events.
 	{
-		Menu::CGameEventManager2System::AddHandler("player_team", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
+		CGameEventSystem::AddHandler("player_team", {[&](const CUtlSymbolLarge &sName, IGameEvent *pEvent) -> bool
 		{
 			auto aPlayerSlot = pEvent->GetPlayerSlot("userid");
 
-			if(aPlayerSlot == CPlayerSlot::InvalidIndex())
+			if(aPlayerSlot.IsValid())
 			{
 				return false;
 			}
@@ -1217,7 +1215,7 @@ void MenuSystem_Plugin::OnMenuDisplayItem(IMenu *pMenu, CPlayerSlot aSlot, IMenu
 
 	bool bPlayerAreTranslated = false;
 
-	if(aSlot != CPlayerSlot::InvalidIndex())
+	if(aSlot.IsValid())
 	{
 		auto &aPlayer = GetPlayerData(aSlot);
 
@@ -1472,7 +1470,7 @@ bool MenuSystem_Plugin::InitSchema(char *error, size_t maxlen)
 #endif
 	);
 
-	Menu::Schema::CSystem::CBufferStringVector vecMessages;
+	Menu::Schema::CSystem::CStringVector vecMessages;
 
 	bool bResult = Menu::Schema::CSystem::Init(g_pSchemaSystem, vecLoadLibraries, &vecMessages);
 
@@ -1510,7 +1508,7 @@ bool MenuSystem_Plugin::LoadSchema(char *error, size_t maxlen)
 
 	if(CLogger::IsChannelEnabled(LV_DETAILED))
 	{
-		Menu::Schema::CSystem::CBufferStringVector vecMessages;
+		Menu::Schema::CSystem::CStringVector vecMessages;
 
 		using Concat_t = decltype(g_arrEmbedsConcat)::value_type;
 		using SchemaFullDetails_t = Menu::Schema::CSystem::FullDetails_t;
@@ -1585,7 +1583,7 @@ bool MenuSystem_Plugin::ClearPathResolver(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::InitProvider(char *error, size_t maxlen)
 {
-	GameData::CBufferStringVector vecMessages;
+	GameData::CStringVector vecMessages;
 
 	bool bResult = CProvider::Init(vecMessages);
 
@@ -1622,7 +1620,7 @@ bool MenuSystem_Plugin::InitProvider(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::LoadProvider(char *error, size_t maxlen)
 {
-	GameData::CBufferStringVector vecMessages;
+	GameData::CStringVector vecMessages;
 
 	bool bResult = CProvider::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages);
 
@@ -1656,7 +1654,7 @@ bool MenuSystem_Plugin::LoadProvider(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::UnloadProvider(char *error, size_t maxlen)
 {
-	GameData::CBufferStringVector vecMessages;
+	GameData::CStringVector vecMessages;
 
 	bool bResult = CProvider::Destroy(vecMessages);
 
@@ -2013,6 +2011,7 @@ void MenuSystem_Plugin::SpawnMenu(CMenu *pInternalMenu, CPlayerSlot aInitiatorSl
 		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_BACKGROUND_INDEX], vecBackgroundOrigin, angRotation);
 		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_INACTIVE_INDEX], vecOrigin, angRotation);
 		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_ACTIVE_INDEX], vecOrigin, angRotation);
+		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_DISABLED_ACTIVE_INDEX], vecOrigin, angRotation);
 	}
 
 	class CMenuEntityListener : public IEntityManager::IProviderAgent::IEntityListener
@@ -2714,7 +2713,7 @@ bool MenuSystem_Plugin::ParseTranslations(char *error, size_t maxlen)
 
 	CUtlVector<CUtlString> vecTranslationsFiles;
 
-	Translations::CBufferStringVector vecSubmessages;
+	Translations::CStringVector vecSubmessages;
 
 	CUtlString sMessage;
 
@@ -2783,7 +2782,7 @@ bool MenuSystem_Plugin::ParseTranslations2(char *error, size_t maxlen)
 	CUtlVector<CUtlString> vecTranslationsDirs, 
 	                       vecTranslationFilenames;
 
-	Translations::CBufferStringVector vecSubmessages;
+	Translations::CStringVector vecSubmessages;
 
 	CUtlString sMessage;
 
@@ -2879,7 +2878,7 @@ bool MenuSystem_Plugin::LoadChat(char *error, size_t maxlen)
 {
 	CUtlVector<CUtlString> vecMessages;
 
-	if(!Menu::CChatSystem::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages))
+	if(!CChatSystem::Load(m_sBaseGameDirectory.c_str(), MENUSYSTEM_BASE_PATHID, vecMessages))
 	{
 		if(vecMessages.Count() && CLogger::IsChannelEnabled(LS_WARNING))
 		{
@@ -2906,14 +2905,14 @@ bool MenuSystem_Plugin::LoadChat(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::ClearChat(char *error, size_t maxlen)
 {
-	Menu::CChatSystem::Clear();
+	CChatSystem::Clear();
 
 	return true;
 }
 
 bool MenuSystem_Plugin::HookGameEvents(char *error, size_t maxlen)
 {
-	if(!Menu::CGameEventManager2System::HookAll())
+	if(!CGameEventSystem::HookAll())
 	{
 		strncpy(error, "Failed to hook game events", maxlen);
 
@@ -2925,7 +2924,7 @@ bool MenuSystem_Plugin::HookGameEvents(char *error, size_t maxlen)
 
 bool MenuSystem_Plugin::UnhookGameEvents(char *error, size_t maxlen)
 {
-	if(!Menu::CGameEventManager2System::UnhookAll())
+	if(!CGameEventSystem::UnhookAll())
 	{
 		strncpy(error, "Failed to unhook game events", maxlen);
 
@@ -2986,9 +2985,9 @@ void MenuSystem_Plugin::OnMenuSelectCommand(const CCommandContext &context, cons
 
 	auto aSlot = context.GetPlayerSlot();
 
-	if(aSlot == CPlayerSlot::InvalidIndex())
+	if(!aSlot.IsValid())
 	{
-		CLogger::MessageFormat("Menu select item is %d from a root console? ^_-\n", iSelectItem);
+		CLogger::MessageFormat("Menu select item is %d from a root console?\n", iSelectItem);
 
 		return;
 	}
@@ -3063,19 +3062,74 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 				pszArg1++;
 			}
 
-			bool bIsSilent = *pszArg1 == Menu::CChatCommandSystem::GetSilentTrigger();
+			bool bIsSilent = *pszArg1 == CChatSystem::GetSilentTrigger();
 
-			if(bIsSilent || *pszArg1 == Menu::CChatCommandSystem::GetPublicTrigger())
+			if(bIsSilent || *pszArg1 == CChatSystem::GetPublicTrigger())
 			{
 				pszArg1++; // Skip a command character.
 
-				// Print a chat message before.
-				if(!bIsSilent && g_pCVar)
+				// Check for menu selection commands (1-9)
+				if(pszArg1[0] >= '1' && pszArg1[0] <= '9' && (pszArg1[1] == '\0' || pszArg1[1] == ' '))
 				{
-					SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
+					int iMenuSelection = pszArg1[0] - '0';
+					
+					if(CLogger::IsChannelEnabled(LV_DETAILED))
+					{
+						CLogger::DetailedFormat("Menu selection via chat command: %d (silent: %s)\n", iMenuSelection, bIsSilent ? "true" : "false");
+					}
+
+					// Print a chat message before if not silent.
+					if(!bIsSilent && g_pCVar)
+					{
+						SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
+					}
+
+					// Call menu selection directly
+					if(aPlayerSlot.IsValid())
+					{
+						auto &aPlayer = GetPlayerData(aPlayerSlot);
+
+						if(aPlayer.IsConnected())
+						{
+							auto &vecMenus = aPlayer.GetMenus();
+
+							if(vecMenus.Count())
+							{
+								IMenu::Index_t iActiveMenu = aPlayer.GetActiveMenuIndex();
+
+								if(iActiveMenu == MENU_INVLID_INDEX)
+								{
+									FOR_EACH_VEC(vecMenus, i)
+									{
+										const auto &[_, pMenu] = vecMenus.Element(i);
+
+										CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
+
+										if(pInternalMenu)
+										{
+											pInternalMenu->OnSelect(aPlayerSlot, iMenuSelection, IMenu::MENU_DISPLAY_DEFAULT);
+											break;
+										}
+									}
+								}
+								else
+								{
+									CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(vecMenus[iActiveMenu].m_pInstance);
+
+									if(pInternalMenu)
+									{
+										pInternalMenu->OnSelect(aPlayerSlot, iMenuSelection, IMenu::MENU_DISPLAY_DEFAULT);
+									}
+								}
+							}
+						}
+					}
+
+					// no return
+					// cuz other frameworks may use this command so we should not block them
+					//RETURN_META(MRES_SUPERCEDE);
 				}
 
-				// Call the handler.
 				{
 					size_t nArg1Length = 0;
 
@@ -3096,8 +3150,8 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 
 					if(CLogger::IsChannelEnabled(LV_DETAILED))
 					{
-						const auto &aConcat = g_aEmbedConcat, 
-						           &aConcat2 = g_aEmbed2Concat, 
+						const auto &aConcat = g_aEmbedConcat,
+						           &aConcat2 = g_aEmbed2Concat,
 						           &aConcat3 = g_aEmbed3Concat;
 
 						CBufferStringN<1024> sBuffer;
@@ -3117,84 +3171,24 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						CLogger::Detailed(sBuffer);
 					}
 
-					// Check if the command is a number (for menu selection)
-					const char* pszCommand = vecArgs[0].Get();
-					bool bIsMenuSelect = false;
-					int iSelectItem = -1;
-					
-					// Check if it's a single digit (1-9, 0)
-					if (strlen(pszCommand) == 1 && isdigit(pszCommand[0]))
+					uint16 iHandler = CChatSystem::FindHandler(vecArgs[0]);
+
+					if(CChatSystem::IsValidHandler(iHandler)) // Chat command is found.
 					{
-						iSelectItem = pszCommand[0] - '0';
-						if (iSelectItem == 0) iSelectItem = 10; // 0 represents item 10
-						
-						// Check if player has active menus
-						auto &aPlayer = GetPlayerData(aPlayerSlot);
-						if (aPlayer.IsConnected())
+						// Print a chat message before.
+						if(!bIsSilent && g_pCVar)
 						{
-							auto &vecMenus = aPlayer.GetMenus();
-							if (vecMenus.Count() > 0)
-							{
-								bIsMenuSelect = true;
-								
-								if(CLogger::IsChannelEnabled(LV_DETAILED))
-								{
-									CLogger::DetailedFormat("Chat menu select: Player %d selected item %d\n", aPlayerSlot.Get(), iSelectItem);
-								}
-								
-								// Handle menu selection
-								IMenu::Index_t iActiveMenu = aPlayer.GetActiveMenuIndex();
-								
-								if(iActiveMenu == MENU_INVLID_INDEX)
-								{
-									// No specific active menu, use first available
-									const auto &[_, pMenu] = vecMenus.Element(0);
-									CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(pMenu);
-									if(pInternalMenu)
-									{
-										pInternalMenu->OnSelect(aPlayerSlot, iSelectItem, IMenu::MENU_DISPLAY_DEFAULT);
-									}
-								}
-								else
-								{
-									// Use the active menu
-									CMenu *pInternalMenu = m_MenuAllocator.FindAndUpperCast(vecMenus[iActiveMenu].m_pInstance);
-									if(pInternalMenu)
-									{
-										pInternalMenu->OnSelect(aPlayerSlot, iSelectItem, IMenu::MENU_DISPLAY_DEFAULT);
-									}
-								}
-							}
+							SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
 						}
+
+						CChatSystem::Call(iHandler, vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
 					}
-					
-					// If not a menu selection, handle as regular chat command
-					if (!bIsMenuSelect)
+					else if(g_pCVar)
 					{
-						Menu::CChatCommandSystem::Handle(vecArgs[0], aPlayerSlot, bIsSilent, vecArgs);
+						SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
 					}
 				}
 
-				// For silent commands, conditionally allow other plugins to process
-				if(bIsSilent)
-				{
-					if(m_aEnableSilentCommandDispatchConVar.GetBool())
-					{
-						if(CLogger::IsChannelEnabled(LV_DETAILED))
-						{
-							CLogger::Detailed("Silent command processed, dispatching original command for other plugins (enabled by ConVar)\n");
-						}
-						// Dispatch the original command so other plugins can see it
-						SH_CALL(g_pCVar, &ICvar::DispatchConCommand)(hCommand, aContext, aArgs);
-					}
-					else
-					{
-						if(CLogger::IsChannelEnabled(LV_DETAILED))
-						{
-							CLogger::Detailed("Silent command processed, NOT dispatching to other plugins (disabled by ConVar)\n");
-						}
-					}
-				}
 				RETURN_META(MRES_SUPERCEDE);
 			}
 		}
@@ -3276,11 +3270,9 @@ void MenuSystem_Plugin::SendSetConVarMessage(IRecipientFilter *pFilter, CUtlVect
 		CLogger::Detailed(sBuffer);
 	}
 
-	auto *pMessage = pSetConVarMessage->AllocateMessage();
+	auto *pMessage = pSetConVarMessage->AllocateMessage()->As<CNETMsg_SetConVar_t>();
 
-	auto *pMessagePB = pMessage->ToPB<CNETMsg_SetConVar>();
-
-	auto *pMessageCVars = pMessagePB->mutable_convars();
+	auto *pMessageCVars = pMessage->mutable_convars();
 
 	for(const auto &[pszName, pszValue] : vecCvars)
 	{
@@ -3292,29 +3284,21 @@ void MenuSystem_Plugin::SendSetConVarMessage(IRecipientFilter *pFilter, CUtlVect
 
 	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pSetConVarMessage, pMessage, 0);
 
-#ifndef _WIN32
-	Destruct(pMessage);
-	free((void *)pMessage);
-#endif // !_WIN32
+	delete pMessage;
 }
 
 void MenuSystem_Plugin::SendCvarValueQuery(IRecipientFilter *pFilter, const char *pszName, int iCookie)
 {
 	auto *pGetCvarValueMessage = m_pGetCvarValueMessage;
 
-	auto *pMessage = pGetCvarValueMessage->AllocateMessage();
+	auto *pMessage = pGetCvarValueMessage->AllocateMessage()->As<CSVCMsg_GetCvarValue_t>();
 
-	auto *pMessagePB = pMessage->ToPB<CSVCMsg_GetCvarValue>();
-
-	pMessagePB->set_cvar_name(pszName);
-	pMessagePB->set_cookie(iCookie);
+	pMessage->set_cvar_name(pszName);
+	pMessage->set_cookie(iCookie);
 
 	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pGetCvarValueMessage, pMessage, 0);
 
-#ifndef _WIN32
-	Destruct(pMessage);
-	free((void *)pMessage);
-#endif // !_WIN32
+	delete pMessage;
 }
 
 void MenuSystem_Plugin::SendChatMessage(IRecipientFilter *pFilter, int iEntityIndex, bool bIsChat, const char *pszChatMessageFormat, const char *pszParam1, const char *pszParam2, const char *pszParam3, const char *pszParam4)
@@ -3361,24 +3345,19 @@ void MenuSystem_Plugin::SendChatMessage(IRecipientFilter *pFilter, int iEntityIn
 		CLogger::Detailed(sBuffer);
 	}
 
-	auto *pMessage = pSayText2Message->AllocateMessage();
+	auto *pMessage = pSayText2Message->AllocateMessage()->As<CUserMessageSayText2_t>();
 
-	auto *pMessagePB = pMessage->ToPB<CUserMessageSayText2>();
-
-	pMessagePB->set_entityindex(iEntityIndex);
-	pMessagePB->set_chat(bIsChat);
-	pMessagePB->set_messagename(pszChatMessageFormat);
-	pMessagePB->set_param1(pszParam1);
-	pMessagePB->set_param2(pszParam2);
-	pMessagePB->set_param3(pszParam3);
-	pMessagePB->set_param4(pszParam4);
+	pMessage->set_entityindex(iEntityIndex);
+	pMessage->set_chat(bIsChat);
+	pMessage->set_messagename(pszChatMessageFormat);
+	pMessage->set_param1(pszParam1);
+	pMessage->set_param2(pszParam2);
+	pMessage->set_param3(pszParam3);
+	pMessage->set_param4(pszParam4);
 
 	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pSayText2Message, pMessage, 0);
 
-#ifndef _WIN32
-	Destruct(pMessage);
-	free((void *)pMessage);
-#endif // !_WIN32
+	delete pMessage;
 }
 
 void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestination, size_t nParamCount, const char *pszParam, ...)
@@ -3403,12 +3382,10 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 		CLogger::Detailed(sBuffer);
 	}
 
-	auto *pMessage = pTextMsg->AllocateMessage();
+	auto *pMessage = pTextMsg->AllocateMessage()->As<CUserMessageTextMsg_t>();
 
-	auto *pMessagePB = pMessage->ToPB<CUserMessageTextMsg>();
-
-	pMessagePB->set_dest(iDestination);
-	pMessagePB->add_param(pszParam);
+	pMessage->set_dest(iDestination);
+	pMessage->add_param(pszParam);
 	nParamCount--;
 
 	// Parse incoming parameters.
@@ -3422,7 +3399,7 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 
 		do
 		{
-			pMessagePB->add_param(va_arg(aParams, const char *));
+			pMessage->add_param(va_arg(aParams, const char *));
 
 			n++;
 		}
@@ -3431,12 +3408,9 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 		va_end(aParams);
 	}
 
-	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pTextMsg, pMessagePB, 0);
+	g_pGameEventSystem->PostEventAbstract(-1, false, pFilter, pTextMsg, pMessage, 0);
 
-#ifndef _WIN32
-	Destruct(pMessage);
-	free((void *)pMessage);
-#endif // !_WIN32
+	delete pMessage;
 }
 
 // void MenuSystem_Plugin::SendVGUIMenuMessage(IRecipientFilter *pFilter, const char *pszName, const bool *pIsShow, KeyValues3 *pKeys)
@@ -3495,7 +3469,7 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 // 		CLogger::Detailed(sBuffer);
 // 	}
 
-// 	auto *pMessage = pVGUIMenuMsg->AllocateMessage()->ToPB<CCSUsrMsg_VGUIMenu>();
+// 	auto *pMessage = pVGUIMenuMsg->AllocateMessage()->As<CCSUsrMsg_VGUIMenu_t>();
 
 // 	if(pszName)
 // 	{

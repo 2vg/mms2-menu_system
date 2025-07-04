@@ -33,6 +33,11 @@
 * [DynLibUtils](https://github.com/Wend4r/cpp-memory_utils) - MIT
 * [Translations](https://github.com/Wend4r/s2u-translations) - GPL-3.0
 
+## Provider projects
+
+* CounterStrikeSharp - [MenuSystemSharp](https://github.com/2vg/MenuSystemSharp)
+* Plugify's [Menu System](https://github.com/untrustedmodders/plugify-menu-system)
+
 ## How to build
 
 ### 1. Install dependencies

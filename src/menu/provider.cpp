@@ -34,7 +34,7 @@ Menu::CProvider::CProvider()
 {
 }
 
-bool Menu::CProvider::Init(GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::Init(GameData::CStringVector &vecMessages)
 {
 	// Enigne 2.
 	{
@@ -81,7 +81,7 @@ bool Menu::CProvider::Init(GameData::CBufferStringVector &vecMessages)
 	return true;
 }
 
-bool Menu::CProvider::Load(const char *pszBaseDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::Load(const char *pszBaseDir, const char *pszPathID, GameData::CStringVector &vecMessages)
 {
 	if(!LoadGameData(pszBaseDir, pszPathID, vecMessages))
 	{
@@ -93,7 +93,7 @@ bool Menu::CProvider::Load(const char *pszBaseDir, const char *pszPathID, GameDa
 	return true;
 }
 
-bool Menu::CProvider::Destroy(GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::Destroy(GameData::CStringVector &vecMessages)
 {
 	m_mapLibraries.PurgeAndDeleteElements();
 
@@ -119,17 +119,17 @@ CUtlSymbolLarge Menu::CProvider::FindSymbol(const char *pszText) const
 	return m_aSymbolTable.Find(pszText);
 }
 
-bool Menu::CProvider::LoadGameData(const char *pszBaseGameDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::LoadGameData(const char *pszBaseGameDir, const char *pszPathID, GameData::CStringVector &vecMessages)
 {
 	return m_aStorage.Load(this, pszBaseGameDir, pszPathID, vecMessages);
 }
 
-bool Menu::CProvider::CGameDataStorage::Load(IGameData *pRoot, const char *pszBaseGameDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::Load(IGameData *pRoot, const char *pszBaseGameDir, const char *pszPathID, GameData::CStringVector &vecMessages)
 {
 	const struct
 	{
 		const char *pszFilename;
-		bool (Menu::CProvider::CGameDataStorage::*pfnLoad)(IGameData *, KeyValues3 *, GameData::CBufferStringVector &);
+		bool (Menu::CProvider::CGameDataStorage::*pfnLoad)(IGameData *, KeyValues3 *, GameData::CStringVector &);
 	} aConfigs[] =
 	{
 		{
@@ -210,27 +210,27 @@ bool Menu::CProvider::CGameDataStorage::Load(IGameData *pRoot, const char *pszBa
 	return true;
 }
 
-bool Menu::CProvider::CGameDataStorage::LoadBaseEntity(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::LoadBaseEntity(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages)
 {
 	return m_aBaseEntity.Load(pRoot, pGameConfig, vecMessages);
 }
 
-bool Menu::CProvider::CGameDataStorage::LoadBasePlayerPawn(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::LoadBasePlayerPawn(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages)
 {
 	return m_aBasePlayerPawn.Load(pRoot, pGameConfig, vecMessages);
 }
 
-bool Menu::CProvider::CGameDataStorage::LoadGameSystem(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::LoadGameSystem(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages)
 {
 	return m_aGameSystem.Load(pRoot, pGameConfig, vecMessages);
 }
 
-bool Menu::CProvider::CGameDataStorage::LoadSource2Server(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::LoadSource2Server(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages)
 {
 	return m_aSource2Server.Load(pRoot, pGameConfig, vecMessages);
 }
 
-bool Menu::CProvider::CGameDataStorage::LoadUserCmd(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::LoadUserCmd(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages)
 {
 	return m_aUserCmd.Load(pRoot, pGameConfig, vecMessages);
 }

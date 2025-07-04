@@ -51,7 +51,7 @@ char Menu::CChatCommandSystem::GetSilentTrigger()
 
 bool Menu::CChatCommandSystem::Handle(const char *pszName, CPlayerSlot aSlot, bool bIsSilent, const CUtlVector<CUtlString> &vecArgs)
 {
-	if(aSlot == CPlayerSlot::InvalidIndex())
+	if(!aSlot.IsValid())
 	{
 		CLogger::Message("Type the chat command from root console?\n");
 

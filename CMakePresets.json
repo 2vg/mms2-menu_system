@@ -35,6 +35,25 @@
 				"CMAKE_CONFIGURATION_TYPES": "Debug;Release"
 			}
 		},
+		{
+			"name": "VisualStudio-Plugify",
+			"displayName": "Visual Studio (Plugify)",
+
+			"condition":
+			{
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Windows"
+			},
+
+			"binaryDir": "${sourceDir}\\build\\${hostSystemName}\\${presetName}",
+			"generator": "Visual Studio 17 2022",
+			"description": "Build using Visual Studio generator with Plugify mode",
+			"cacheVariables":
+			{
+				"CMAKE_CONFIGURATION_TYPES": "Debug;Release"
+			}
+		},
 
 		{
 			"name": "Debug",
@@ -49,7 +68,6 @@
 		{
 			"name": "RelWithDebInfo",
 			"displayName": "Ninja - Release With Debug Info",
-			"description": "Build using Visual Studio generator",
 			"inherits": "NinjaBase",
 
 			"cacheVariables":

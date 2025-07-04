@@ -28,14 +28,14 @@
 #	include <playerslot.h>
 #	include <igamesystem.h>
 
+#	include <tier1/utlvector.h>
+#	include <tier1/utlstringmap.h>
+
 class CGameEntitySystem;
 class CBaseGameSystemFactory;
 class CGameSystemEventDispatcher;
 class CServerSideClient;
 class IGameEventManager2;
-template<class T> class CUtlStringMap;
-template<class T, class I> class CUtlMemory;
-template<class T, class I, class A> class CUtlVector;
 struct AddedGameSystem_t;
 
 /**
@@ -70,7 +70,7 @@ public:
 	 * 
 	 * @return              A pointer to a list of game systems.
 	 */
-	virtual CUtlVector<AddedGameSystem_t, int, CUtlMemory<AddedGameSystem_t, int>> *GetGameSystemsPointer() const = 0;
+	virtual CUtlVector<AddedGameSystem_t> *GetGameSystemsPointer() const = 0;
 
 	/**
 	 * @brief Gets a game system event dispatcher.

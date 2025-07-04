@@ -63,7 +63,7 @@ namespace Menu
 
 		private:
 			CSystem::CClass *m_pClass;
-			CSystem::CClass::Fields::ListenerCallbacksCollector m_aClassFieldsClassbacks;
+			CSystem::CClass::Fields::CListenerCallbacksCollector m_aClassFieldsClassbacks;
 
 			struct
 			{
