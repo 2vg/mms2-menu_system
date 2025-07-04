@@ -668,7 +668,8 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 			aConcat.AppendToBuffer(m_sInactiveText, pszTitleText);
 			aConcat.AppendEndsToBuffer(m_sInactiveText);
 			aConcat.AppendEndsAndStartsToBuffer(m_sActiveText);
-			aConcat.AppendEndsAndStartsToBuffer(m_sDisabledActiveText);
+			aConcat.AppendToBuffer(m_sDisabledActiveText, pszTitleText);
+			aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
 		}
 	}
 
