@@ -2011,6 +2011,7 @@ void MenuSystem_Plugin::SpawnMenu(CMenu *pInternalMenu, CPlayerSlot aInitiatorSl
 		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_BACKGROUND_INDEX], vecBackgroundOrigin, angRotation);
 		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_INACTIVE_INDEX], vecOrigin, angRotation);
 		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_ACTIVE_INDEX], vecOrigin, angRotation);
+		SetMenuKeyValues(vecMenuKVs[MENU_ENTITY_DISABLED_ACTIVE_INDEX], vecOrigin, angRotation);
 	}
 
 	class CMenuEntityListener : public IEntityManager::IProviderAgent::IEntityListener
