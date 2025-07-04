@@ -5,12 +5,12 @@
  * Written by Wend4r & komashchenko (Vladimir Ezhikov & Borys Komashchenko).
  * ======================================================
 
- * This program is free software: you can redistribute it and/or modify
+ * CThis program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
 
- * This program is distributed in the hope that it will be useful,
+ * CThis program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -108,7 +108,10 @@ class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, publ
                                 public Menu::CGameEventManager2System, public Menu::CChatSystem, public Menu::CProfileSystem // Subsystems.
 {
 public:
-	using This = MenuSystem_Plugin;
+	using CThis = MenuSystem_Plugin;
+	using CGameEventSystem = Menu::CGameEventManager2System;
+	using CChatSystem = Menu::CChatSystem;
+	using CProfileSystem = Menu::CProfileSystem;
 
 	MenuSystem_Plugin();
 
@@ -450,13 +453,13 @@ public: // Event actions.
 
 private:
 	// Commands of reload components.
-	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_schema", OnReloadSchemaCommand, "Reload schema fields of classes", FCVAR_LINKED_CONCOMMAND);
-	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
-	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_profiles", OnReloadProfilesCommand, "Reload menu profiles", FCVAR_LINKED_CONCOMMAND);
-	CON_COMMAND_MEMBER_F(This, "mm_" META_PLUGIN_PREFIX "_reload_translations", OnReloadTranslationsCommand, "Reload translations", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(CThis, "mm_" META_PLUGIN_PREFIX "_reload_schema", OnReloadSchemaCommand, "Reload schema fields of classes", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(CThis, "mm_" META_PLUGIN_PREFIX "_reload_gamedata", OnReloadGameDataCommand, "Reload gamedata configs", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(CThis, "mm_" META_PLUGIN_PREFIX "_reload_profiles", OnReloadProfilesCommand, "Reload menu profiles", FCVAR_LINKED_CONCOMMAND);
+	CON_COMMAND_MEMBER_F(CThis, "mm_" META_PLUGIN_PREFIX "_reload_translations", OnReloadTranslationsCommand, "Reload translations", FCVAR_LINKED_CONCOMMAND);
 
 	// Players interaction.
-	CON_COMMAND_MEMBER_F(This, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
+	CON_COMMAND_MEMBER_F(CThis, "menuselect", OnMenuSelectCommand, "", FCVAR_LINKED_CONCOMMAND | FCVAR_CLIENT_CAN_EXECUTE);
 
 private: // ConVars. See the constructor
 	CConVar<bool> m_aEnableClientCommandDetailsConVar;
@@ -522,7 +525,7 @@ private: // Language (hash)map.
 	CUtlMap<CUtlSymbolLarge, CLanguage> m_mapLanguages;
 
 private: // Fields.
-	CGameSystemStaticFactory<This> *m_pFactory;
+	CGameSystemStaticFactory<CThis> *m_pFactory;
 
 	// Provide to Entity Manager plugin.
 	PluginId m_iEntityManager;

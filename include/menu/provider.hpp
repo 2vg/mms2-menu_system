@@ -60,9 +60,9 @@ namespace Menu
 		CProvider();
 
 	public:
-		bool Init(GameData::CBufferStringVector &vecMessages);
-		bool Load(const char *pszBaseDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages);
-		bool Destroy(GameData::CBufferStringVector &vecMessages);
+		bool Init(GameData::CStringVector &vecMessages);
+		bool Load(const char *pszBaseDir, const char *pszPathID, GameData::CStringVector &vecMessages);
+		bool Destroy(GameData::CStringVector &vecMessages);
 
 	protected:
 		CUtlSymbolLarge GetSymbol(const char *pszText);
@@ -72,20 +72,20 @@ namespace Menu
 		const DynLibUtils::CModule *FindLibrary(const char *pszName) const;
 
 	protected:
-		bool LoadGameData(const char *pszBaseGameDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages);
+		bool LoadGameData(const char *pszBaseGameDir, const char *pszPathID, GameData::CStringVector &vecMessages);
 
 	public:
 		class CGameDataStorage
 		{
 		public:
-			bool Load(IGameData *pRoot, const char *pszBaseGameDir, const char *pszPathID, GameData::CBufferStringVector &vecMessages);
+			bool Load(IGameData *pRoot, const char *pszBaseGameDir, const char *pszPathID, GameData::CStringVector &vecMessages);
 
 		protected:
-			bool LoadBaseEntity(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
-			bool LoadBasePlayerPawn(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
-			bool LoadGameSystem(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
-			bool LoadSource2Server(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
-			bool LoadUserCmd(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
+			bool LoadBaseEntity(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages);
+			bool LoadBasePlayerPawn(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages);
+			bool LoadGameSystem(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages);
+			bool LoadSource2Server(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages);
+			bool LoadUserCmd(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages);
 
 		public:
 			class CBaseEntity
@@ -94,7 +94,7 @@ namespace Menu
 				CBaseEntity();
 
 			public:
-				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
+				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages);
 				void Reset();
 
 			public:
@@ -102,8 +102,8 @@ namespace Menu
 				void Teleport(CEntityInstance *pInstance, const Vector &vecPosition = {}, const QAngle &angRotation = {}, const Vector &velocity = {}) const;
 
 			private:
-				GameData::Config::Addresses::ListenerCallbacksCollector m_aAddressCallbacks;
-				GameData::Config::Offsets::ListenerCallbacksCollector m_aOffsetCallbacks;
+				GameData::Config::Addresses_t::CListenerCallbacksCollector m_aAddressCallbacks;
+				GameData::Config::Offsets_t::CListenerCallbacksCollector m_aOffsetCallbacks;
 				GameData::Config m_aGameConfig;
 
 			private: // Addresses.
@@ -119,14 +119,14 @@ namespace Menu
 				CBasePlayerPawn();
 
 			public:
-				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
+				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages);
 				void Reset();
 
 			public:
 				Vector GetEyePosition(CEntityInstance *pInstance) const;
 
 			private:
-				GameData::Config::Offsets::ListenerCallbacksCollector m_aOffsetCallbacks;
+				GameData::Config::Offsets_t::CListenerCallbacksCollector m_aOffsetCallbacks;
 				GameData::Config m_aGameConfig;
 
 			private: // Addresses.
@@ -139,7 +139,7 @@ namespace Menu
 				CGameSystem();
 
 			public:
-				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
+				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages);
 				void Reset();
 
 			public:
@@ -150,7 +150,7 @@ namespace Menu
 				CGameSystemEventDispatcher *GetOutOfGameEventDispatcher() const;
 
 			private:
-				GameData::Config::Addresses::ListenerCallbacksCollector m_aAddressCallbacks;
+				GameData::Config::Addresses_t::CListenerCallbacksCollector m_aAddressCallbacks;
 				GameData::Config m_aGameConfig;
 
 			private: // Addresses.
@@ -167,14 +167,14 @@ namespace Menu
 				CSource2Server();
 
 			public:
-				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
+				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages);
 				void Reset();
 
 			public:
 				CGameEventManager **GetGameEventManagerPointer() const;
 
 			private:
-				GameData::Config::Addresses::ListenerCallbacksCollector m_aAddressCallbacks;
+				GameData::Config::Addresses_t::CListenerCallbacksCollector m_aAddressCallbacks;
 				GameData::Config m_aGameConfig;
 
 			private: // Addresses.
@@ -187,7 +187,7 @@ namespace Menu
 				CUserCmd();
 
 			public:
-				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages);
+				bool Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages);
 				void Reset();
 
 			public:
@@ -196,7 +196,7 @@ namespace Menu
 				void ProcessWithPlayerController(CBasePlayerController *pController, CCSGOUserCmd *cmds, int numcmds, bool paused, float margin) const;
 
 			private:
-				GameData::Config::Addresses::ListenerCallbacksCollector m_aAddressCallbacks;
+				GameData::Config::Addresses_t::CListenerCallbacksCollector m_aAddressCallbacks;
 				GameData::Config m_aGameConfig;
 
 			private: // Addresses.

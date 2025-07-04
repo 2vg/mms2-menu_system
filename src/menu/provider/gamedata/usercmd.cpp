@@ -37,7 +37,7 @@ Menu::CProvider::CGameDataStorage::CUserCmd::CUserCmd()
 	}
 }
 
-bool Menu::CProvider::CGameDataStorage::CUserCmd::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CBufferStringVector &vecMessages)
+bool Menu::CProvider::CGameDataStorage::CUserCmd::Load(IGameData *pRoot, KeyValues3 *pGameConfig, GameData::CStringVector &vecMessages)
 {
 	return m_aGameConfig.Load(pRoot, pGameConfig, vecMessages);
 }
