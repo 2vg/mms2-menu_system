@@ -3071,7 +3071,29 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 
 			if(bIsSilent || *pszArg1 == CChatSystem::GetPublicTrigger())
 			{
+				// DEBUG: Log the command character and what follows
+				if(CLogger::IsChannelEnabled(LV_DETAILED))
+				{
+					CLogger::DetailedFormat("DEBUG: Command character detected: '%c', remaining string: '%s'\n", *pszArg1, pszArg1);
+				}
+				
 				pszArg1++; // Skip a command character.
+				
+				// DEBUG: Check if we have content after the command character
+				if(CLogger::IsChannelEnabled(LV_DETAILED))
+				{
+					CLogger::DetailedFormat("DEBUG: After skipping command char - remaining: '%s', length: %zu\n", pszArg1, strlen(pszArg1));
+				}
+				
+				// SAFETY: Check if we have any content after the command character
+				if(*pszArg1 == '\0')
+				{
+					if(CLogger::IsChannelEnabled(LV_DETAILED))
+					{
+						CLogger::DetailedFormat("DEBUG: Empty command detected (only trigger character), ignoring\n");
+					}
+					RETURN_META(MRES_IGNORED);
+				}
 
 				// Check for menu selection commands (1-9)
 				if(*pszArg1 != '\0' && pszArg1[0] >= '1' && pszArg1[0] <= '9' && (pszArg1[1] == '\0' || pszArg1[1] == ' '))
@@ -3146,7 +3168,29 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 
 					CUtlVector<CUtlString> vecArgs;
 
+					// DEBUG: Log before string splitting
+					if(CLogger::IsChannelEnabled(LV_DETAILED))
+					{
+						CLogger::DetailedFormat("DEBUG: About to split string: '%s'\n", pszArg1);
+					}
+
 					V_SplitString(pszArg1, " ", vecArgs);
+					
+					// DEBUG: Log split results
+					if(CLogger::IsChannelEnabled(LV_DETAILED))
+					{
+						CLogger::DetailedFormat("DEBUG: Split result - vecArgs.Count(): %d\n", vecArgs.Count());
+					}
+					
+					// SAFETY: Check if we have any arguments after splitting
+					if(vecArgs.Count() == 0)
+					{
+						if(CLogger::IsChannelEnabled(LV_DETAILED))
+						{
+							CLogger::DetailedFormat("DEBUG: No arguments after splitting, ignoring\n");
+						}
+						RETURN_META(MRES_IGNORED);
+					}
 
 					for(auto &sArg : vecArgs)
 					{
@@ -3174,6 +3218,19 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						}
 
 						CLogger::Detailed(sBuffer);
+					}
+
+					// SAFETY: Double-check array bounds before accessing
+					if(vecArgs.Count() == 0)
+					{
+						CLogger::WarningFormat("SAFETY: vecArgs is empty, cannot access vecArgs[0]\n");
+						RETURN_META(MRES_IGNORED);
+					}
+					
+					// DEBUG: Log the command we're looking for
+					if(CLogger::IsChannelEnabled(LV_DETAILED))
+					{
+						CLogger::DetailedFormat("DEBUG: Looking for handler for command: '%s'\n", vecArgs[0].Get());
 					}
 
 					uint16 iHandler = CChatSystem::FindHandler(vecArgs[0]);
