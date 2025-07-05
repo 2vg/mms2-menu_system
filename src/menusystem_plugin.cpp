@@ -3056,6 +3056,11 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 		{
 			const char *pszArg1 = aArgs.Arg(1);
 
+			if(!pszArg1)
+			{
+				RETURN_META(MRES_IGNORED);
+			}
+
 			// Skip spaces.
 			while(*pszArg1 == ' ')
 			{
@@ -3067,16 +3072,17 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 			if(bIsSilent || *pszArg1 == CChatSystem::GetPublicTrigger())
 			{
 				pszArg1++; // Skip a command character.
+				
+				// Check if we have any content after the command character
+				if(*pszArg1 == '\0')
+				{
+					RETURN_META(MRES_IGNORED);
+				}
 
 				// Check for menu selection commands (1-9)
-				if(pszArg1[0] >= '1' && pszArg1[0] <= '9' && (pszArg1[1] == '\0' || pszArg1[1] == ' '))
+				if(*pszArg1 != '\0' && pszArg1[0] >= '1' && pszArg1[0] <= '9' && (pszArg1[1] == '\0' || pszArg1[1] == ' '))
 				{
 					int iMenuSelection = pszArg1[0] - '0';
-					
-					if(CLogger::IsChannelEnabled(LV_DETAILED))
-					{
-						CLogger::DetailedFormat("Menu selection via chat command: %d (silent: %s)\n", iMenuSelection, bIsSilent ? "true" : "false");
-					}
 
 					// Print a chat message before if not silent.
 					if(!bIsSilent && g_pCVar)
@@ -3142,6 +3148,12 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 					CUtlVector<CUtlString> vecArgs;
 
 					V_SplitString(pszArg1, " ", vecArgs);
+					
+					// Check if we have any arguments after splitting
+					if(vecArgs.Count() == 0)
+					{
+						RETURN_META(MRES_IGNORED);
+					}
 
 					for(auto &sArg : vecArgs)
 					{
@@ -3169,6 +3181,12 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						}
 
 						CLogger::Detailed(sBuffer);
+					}
+
+					// Double-check array bounds before accessing
+					if(vecArgs.Count() == 0)
+					{
+						RETURN_META(MRES_IGNORED);
 					}
 
 					uint16 iHandler = CChatSystem::FindHandler(vecArgs[0]);
