@@ -3068,8 +3068,14 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 			{
 				pszArg1++; // Skip a command character.
 
+				// Check if there's any content after the command character
+				if(*pszArg1 == '\0')
+				{
+					// Empty command (just ! or /), skip processing
+					// Let other frameworks handle this
+				}
 				// Check for menu selection commands (1-9)
-				if(pszArg1[0] >= '1' && pszArg1[0] <= '9' && (pszArg1[1] == '\0' || pszArg1[1] == ' '))
+				else if(pszArg1[0] >= '1' && pszArg1[0] <= '9' && (pszArg1[1] == '\0' || pszArg1[1] == ' '))
 				{
 					int iMenuSelection = pszArg1[0] - '0';
 					
