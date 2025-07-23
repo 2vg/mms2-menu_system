@@ -3079,8 +3079,8 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 					RETURN_META(MRES_IGNORED);
 				}
 
-				// Check for menu selection commands (1-9)
-				if(*pszArg1 != '\0' && pszArg1[0] >= '1' && pszArg1[0] <= '9' && (pszArg1[1] == '\0' || pszArg1[1] == ' '))
+				// Check for menu selection commands (0-9)
+				if(*pszArg1 != '\0' && pszArg1[0] >= '0' && pszArg1[0] <= '9' && (pszArg1[1] == '\0' || pszArg1[1] == ' '))
 				{
 					int iMenuSelection = pszArg1[0] - '0';
 
