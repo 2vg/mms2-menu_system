@@ -599,10 +599,11 @@ Menu::Schema::CSystem::CClass *Menu::Schema::CSystem::GetClass(const char *pszNa
 
 	if(!m_mapClasses.IsValidIndex(iFound))
 	{
-		iFound = m_mapClasses.Insert(sSymbol, {});
+		auto *pClass = new CClass();
+		iFound = m_mapClasses.Insert(sSymbol, pClass);
 	}
 
-	return &m_mapClasses[iFound];
+	return m_mapClasses[iFound];
 }
 
 Menu::Schema::CSystem::CClass *Menu::Schema::CSystem::FindClass(const char *pszName)
@@ -621,7 +622,7 @@ Menu::Schema::CSystem::CClass *Menu::Schema::CSystem::FindClass(const char *pszN
 		return nullptr;
 	}
 
-	return &m_mapClasses[iFound];
+	return m_mapClasses[iFound];
 }
 
 int Menu::Schema::CSystem::FindClassFieldOffset(const char *pszClassName, const char *pszFiledName)
@@ -702,6 +703,12 @@ void Menu::Schema::CSystem::LoadClasses(CSchemaSystemTypeScope *pScope, ClassDet
 
 void Menu::Schema::CSystem::ClearClasses()
 {
+	// Delete all CClass pointers before purging the map
+	FOR_EACH_MAP_FAST(m_mapClasses, i)
+	{
+		delete m_mapClasses[i];
+	}
+	
 	m_tableClasses.Purge();
 	m_mapClasses.Purge();
 }

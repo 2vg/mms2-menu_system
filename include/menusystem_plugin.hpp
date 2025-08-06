@@ -107,6 +107,8 @@ class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, publ
                                 virtual public CLogger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
                                 public Menu::CGameEventManager2System, public Menu::CChatSystem, public Menu::CProfileSystem // Subsystems.
 {
+	DECLARE_GAME_SYSTEM();
+
 public:
 	using CThis = MenuSystem_Plugin;
 	using CGameEventSystem = Menu::CGameEventManager2System;

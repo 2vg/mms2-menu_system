@@ -371,6 +371,13 @@ namespace Menu
 			public:
 				using Fields = GameData::Config::Storage<CUtlSymbolLarge, SchemaClassFieldData_t *>;
 
+				// Default constructor
+				CClass() = default;
+
+				// Delete copy constructor and copy assignment operator
+				CClass(const CClass&) = delete;
+				CClass& operator=(const CClass&) = delete;
+
 				Fields &GetFields()
 				{
 					return m_aFieldStorage;
@@ -410,7 +417,7 @@ namespace Menu
 			CUtlVector<CSchemaSystemTypeScope *> m_vecTypeScopes;
 
 			CUtlSymbolTableLarge m_tableClasses;
-			CUtlMap<CUtlSymbolLarge, CClass> m_mapClasses;
+			CUtlMap<CUtlSymbolLarge, CClass*> m_mapClasses;
 		}; // Menu::Schema::CSystem
 
 		namespace Accessor

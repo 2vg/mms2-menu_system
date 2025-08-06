@@ -9,8 +9,8 @@
 	url = https://github.com/alliedmodders/metamod-source.git
 [submodule "Entity Manager"]
 	path = external/entity_manager
-	url = https://github.com/Wend4r/mms2-entity_manager.git
-	branch = v1.0.3
+	url = https://github.com/2vg/mms2-entity_manager.git
+	branch = dev
 	fetchRecurseSubmodules = false
 
 [submodule "Any Config"]

@@ -117,7 +117,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 {
 	// Adds schema listeners.
 	{
-		Menu::Schema::CSystem *pSchemaHelper = schema_system_cast(this);
+		Menu::Schema::CSystem *pSchemaHelper = static_cast<Menu::Schema::CSystem*>(this);
 	
 		CBaseEntity_Helper::AddListeners(pSchemaHelper);
 		CBaseModelEntity_Helper::AddListeners(pSchemaHelper);
