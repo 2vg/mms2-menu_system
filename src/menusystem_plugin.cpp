@@ -4103,7 +4103,7 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 
 			const auto &aMoveCRC = pBaseUserCmd->move_crc();
 
-			aConcatBuffer2.Append( "Move CRC", (const byte *)aMoveCRC.data(), aMoveCRC.size());
+			aConcatBuffer2.AppendBytes( "Move CRC", (const byte *)aMoveCRC.data(), aMoveCRC.size());
 			aConcatBuffer2.Append( "Consumed Server Angle Changes", pBaseUserCmd->consumed_server_angle_changes());
 			aConcatBuffer2.Append( "Flags", pBaseUserCmd->cmd_flags());
 		}
@@ -4113,6 +4113,7 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 
 			const auto &aInputHistory = pMessage->input_history();
 
+			CConcatLineBuffer aConcatBuffer2(&aConcat2, &sBuffer);
 			for(const auto &aInput : aInputHistory)
 			{
 				if(aInput.has_view_angles())
