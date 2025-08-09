@@ -18,8 +18,7 @@
 	url = https://github.com/Wend4r/s2u-any_config.git
 [submodule "Concat"]
 	path = external/concat
-	url = https://github.com/2vg/s2u-concat.git
-	branch = dev
+	url = https://github.com/Wend4r/s2u-concat.git
 [submodule "GameData"]
 	path = external/gamedata
 	url = https://github.com/2vg/s2u-gamedata.git
