@@ -117,7 +117,7 @@ CUtlSymbolLarge Menu::CProvider::GetSymbol(const char *pszText)
 
 CUtlSymbolLarge Menu::CProvider::FindSymbol(const char *pszText) const
 {
-	return m_aSymbolTable.Find(pszText);
+	return m_aSymbolTable.FindString(pszText);
 }
 
 bool Menu::CProvider::LoadGameData(const char *pszBaseGameDir, const char *pszPathID, GameData::CStringVector &vecMessages)
