@@ -64,7 +64,7 @@
 	const auto *concatVar = GetConcatLine(); \
 
 #define SCHEMA_DETAILS_CONCAT_BUFFER(concatVar, bufferVar) \
-	CConcatLineBuffer concatVar##Buffer(concatVar, &bufferVar);
+	CConcatLineBuffer concatVar##Buffer(concatVar, &bufferVar); \
 	\
 	Assert(concatVar);
 
