@@ -146,6 +146,9 @@ public: // IMenuSystem
 	CGameSystemEventDispatcher *GetOutOfGameEventDispatcher() const override;
 	IGameEventManager2 **GetGameEventManagerPointer() const override;
 
+	// Accessor to hide private member while exposing interface type
+	IEntityManager::IProviderAgent *GetEntityManagerProviderAgent() const;
+
 	class CLanguage : public IMenuSystem::ILanguage
 	{
 		friend class MenuSystem_Plugin;

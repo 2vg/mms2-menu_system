@@ -86,6 +86,12 @@ MenuSystem_Plugin *g_pMenuPlugin = &s_aMenuPlugin;
 
 PLUGIN_EXPOSE(MenuSystem_Plugin, s_aMenuPlugin);
 
+// Public accessor implementation to expose private entity manager agent via interface type
+IEntityManager::IProviderAgent *MenuSystem_Plugin::GetEntityManagerProviderAgent() const
+{
+	return m_pEntityManagerProviderAgent;
+}
+
 MenuSystem_Plugin::MenuSystem_Plugin()
  :  CLogger(GetName(), [](LoggingChannelID_t nTagChannelID)
     {

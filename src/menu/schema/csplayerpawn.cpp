@@ -19,6 +19,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "ientitymgr.hpp"
+
 #include <menu/schema/baseentity.hpp>
 #include <menu/schema/csplayerpawn.hpp>
 #include <menu/schema/cpointorient.hpp>
@@ -70,7 +72,9 @@ void Menu::Schema::CCSPlayerPawn_Helper::CreatePointOrient(CCSPlayerPawn *pCSPla
 	if (!pCSPlayerPawn)
 		return;
 
-	extern IEntityManager::IProviderAgent *g_pEntityManagerProviderAgent;
+	// Access EntityManager provider agent via plugin accessor instead of global extern
+	extern MenuSystem_Plugin *g_pMenuPlugin;
+	IEntityManager::IProviderAgent *g_pEntityManagerProviderAgent = g_pMenuPlugin ? g_pMenuPlugin->GetEntityManagerProviderAgent() : nullptr;
 	if (!g_pEntityManagerProviderAgent)
 		return;
 
