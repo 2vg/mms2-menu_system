@@ -20,14 +20,16 @@
  */
 
 #include <menu/schema/baseentity.hpp>
-#include <menu/schema.hpp>
-
 #include <menu/schema/csplayerpawn.hpp>
 #include <menu/schema/cpointorient.hpp>
+#include <menu/schema.hpp>
+#include <menu/provider.hpp>
 
 #include <entity2/entitysystem.h>
 #include <mathlib/vector.h>
 #include <mathlib/mathlib.h>
+#include <variant.h>
+#include <ehandle.h>
 
 // Static storage for PointOrient handles per player
 CHandle<CPointOrient> Menu::Schema::CCSPlayerPawn_Helper::s_aPlayerPointOrients[64];
