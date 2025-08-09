@@ -27,8 +27,11 @@
 #include <menusystem_plugin.hpp>
 #include <globals.hpp>
 
+#include <entity_manager.hpp>
+#include <entity_manager/provider/entitysystem.hpp>
 #include <entity2/entitysystem.h>
 #include <entity2/entitykeyvalues.h>
+#include <entity2/entityidentity.h>
 #include <mathlib/vector.h>
 #include <mathlib/mathlib.h>
 #include <variant.h>
@@ -67,39 +70,47 @@ void Menu::Schema::CCSPlayerPawn_Helper::CreatePointOrient(CCSPlayerPawn *pCSPla
 	if (!pCSPlayerPawn)
 		return;
 
+	// Use global entity manager provider agent
+	extern EntityManager::ProviderAgent *g_pEntityManagerProviderAgent;
+	if (!g_pEntityManagerProviderAgent)
+		return;
+
 	// Remove existing PointOrient if any
 	CPointOrient* pExistingOrient = GetPointOrient(pCSPlayerPawn);
 	if (pExistingOrient)
 	{
-		// Use entity system to remove entity
-		if (g_pGameEntitySystem)
-		{
-			g_pGameEntitySystem->AddRefEdict(pExistingOrient->GetEdict());
-			g_pGameEntitySystem->RemoveEntity(pExistingOrient);
-		}
+		// Use entity manager to queue entity for destruction
+		g_pEntityManagerProviderAgent->PushDestroyQueue(pExistingOrient);
+		g_pEntityManagerProviderAgent->ExecuteDestroyQueued();
 		SetPointOrient(pCSPlayerPawn, nullptr);
 	}
 
-	// Create new PointOrient entity using entity system
-	if (!g_pGameEntitySystem)
+	// Get the entity system provider
+	auto *pEntitySystem = static_cast<EntityManager::CEntitySystemProvider*>(g_pEntityManagerProviderAgent->GetSystem());
+	if (!pEntitySystem)
 		return;
 
+	// Create new PointOrient entity using entity manager
 	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
 	pKeyValues->SetString("classname", "point_orient");
 	
-	CPointOrient* pOrient = static_cast<CPointOrient*>(g_pGameEntitySystem->CreateEntity("point_orient", -1));
-	if (!pOrient)
+	// Create entity using the proper entity manager API
+	CEntityInstance* pEntityInstance = pEntitySystem->CreateEntity(INVALID_SPAWN_GROUP, "point_orient", EntityNetworkingMode_t::ENTITY_NETWORKING_MODE_NEVER, CEntityIndex(-1), -1, false);
+	if (!pEntityInstance)
 	{
 		delete pKeyValues;
 		return;
 	}
 
+	CPointOrient* pOrient = static_cast<CPointOrient*>(pEntityInstance);
+
 	// Configure PointOrient properties
 	CPointOrient_Helper::GetActiveAccessor(pOrient) = true;
 	CPointOrient_Helper::GetGoalDirectionAccessor(pOrient) = PointOrientGoalDirectionType_t::eEyesForward;
 
-	// Spawn the entity using entity system
-	g_pGameEntitySystem->SpawnEntity(pOrient->GetEntityInstance(), pKeyValues);
+	// Queue the entity for spawning using entity manager
+	pEntitySystem->QueueSpawnEntity(pEntityInstance->m_pEntity, pKeyValues);
+	pEntitySystem->ExecuteQueuedCreation();
 	
 	// Store the PointOrient handle
 	SetPointOrient(pCSPlayerPawn, pOrient);
