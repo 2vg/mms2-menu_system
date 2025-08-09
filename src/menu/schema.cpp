@@ -41,6 +41,10 @@
 
 #include <tier0/platform.h>
 #include <tier0/dbg.h>
+#ifndef Assert
+#	define Assert assert
+#	include <cassert>
+#endif
 #include <tier0/bufferstring.h>
 #include <tier0/commonmacros.h>
 #include <tier0/utlstringtoken.h>
