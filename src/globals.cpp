@@ -102,25 +102,29 @@ bool UnregisterGameEventManager()
 
 void DumpGlobals(const CConcatLineString &aConcat, CBufferString &sOutput)
 {
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pEngineServer);
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pGameResourceServiceServer);
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pGameEventSystem);
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pNetworkMessages);
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pCVar);
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pFullFileSystem);
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pSource2Server);
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pNetworkServerService);
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pSchemaSystem);
+	CConcatLineBuffer concatBuffer(&aConcat, &sOutput);
+	
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pEngineServer);
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pGameResourceServiceServer);
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pGameEventSystem);
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pNetworkMessages);
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pCVar);
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pFullFileSystem);
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pSource2Server);
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pNetworkServerService);
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pSchemaSystem);
 
 	DumpRegisterGlobals(aConcat, sOutput);
 }
 
 void DumpRegisterGlobals(const CConcatLineString &aConcat, CBufferString &sOutput)
 {
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pEntitySystem);
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pGameEntitySystem);
-	GLOBALS_APPEND_VARIABLE(aConcat, CBaseGameSystemFactory::sm_pFirst);
-	GLOBALS_APPEND_VARIABLE(aConcat, g_pGameEventManager);
+	CConcatLineBuffer concatBuffer(&aConcat, &sOutput);
+	
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pEntitySystem);
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pGameEntitySystem);
+	GLOBALS_APPEND_VARIABLE(concatBuffer, CBaseGameSystemFactory::sm_pFirst);
+	GLOBALS_APPEND_VARIABLE(concatBuffer, g_pGameEventManager);
 }
 
 bool DestoryGlobals(char *error, size_t maxlen)

@@ -53,7 +53,7 @@ class CNetworkGameServerBase;
 #	include <interfaces/interfaces.h>
 #	include <igamesystemfactory.h>
 
-#	define GLOBALS_APPEND_VARIABLE(concatVar, var) aConcat.AppendPointerToBuffer(sOutput, #var, var);
+#	define GLOBALS_APPEND_VARIABLE(concatVar, var) aConcat.Append(#var, var);
 
 extern IGameEventSystem *g_pGameEventSystem;
 extern CEntitySystem *g_pEntitySystem;
