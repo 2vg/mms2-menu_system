@@ -153,7 +153,7 @@ CUtlSymbolLarge Menu::CChatSystem::GetAliasSymbol(const char *pszName)
 
 CUtlSymbolLarge Menu::CChatSystem::FindAliasSymbol(const char *pszName) const
 {
-	return m_tableAliases.Find(pszName);
+	return m_tableAliases.FindString(pszName);
 }
 
 CUtlSymbolLarge Menu::CChatSystem::GetAliasValueSymbol(const char *pszValue)
@@ -163,5 +163,5 @@ CUtlSymbolLarge Menu::CChatSystem::GetAliasValueSymbol(const char *pszValue)
 
 CUtlSymbolLarge Menu::CChatSystem::FindAliasValueSymbol(const char *pszValue) const
 {
-	return m_tableAliasValues.Find(pszValue);
+	return m_tableAliasValues.FindString(pszValue);
 }

@@ -31,6 +31,15 @@
 #	include <algorithm>
 #endif // __cpp_lib_ranges
 
+// Ensure HL2SDK Assert macros are not shadowed
+#ifdef assert
+#	undef assert
+#endif
+#ifdef Assert
+#	undef Assert
+#endif
+
+#include <tier0/platform.h>
 #include <tier0/dbg.h>
 #include <tier0/bufferstring.h>
 #include <tier0/commonmacros.h>
@@ -601,7 +610,7 @@ CUtlSymbolLarge Menu::Schema::CSystem::CClass::GetFieldSymbol(const char *pszNam
 
 CUtlSymbolLarge Menu::Schema::CSystem::CClass::FindFieldSymbol(const char *pszName) const
 {
-	return m_tableFileds.Find(pszName);
+	return m_tableFileds.FindString(pszName);
 }
 
 Menu::Schema::CSystem::CClass *Menu::Schema::CSystem::GetClass(const char *pszName)
@@ -738,5 +747,5 @@ CUtlSymbolLarge Menu::Schema::CSystem::GetClassSymbol(const char *pszName)
 
 CUtlSymbolLarge Menu::Schema::CSystem::FindClassSymbol(const char *pszName) const
 {
-	return m_tableClasses.Find(pszName);
+	return m_tableClasses.FindString(pszName);
 }

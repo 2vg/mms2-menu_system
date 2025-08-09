@@ -111,7 +111,7 @@ namespace Menu
 
 	protected:
 		CUtlSymbolLarge GetSymbol(const char *pszText) { return m_aSymbolTable.AddString(pszText); }
-		CUtlSymbolLarge FindSymbol(const char *pszText) const { return m_aSymbolTable.Find(pszText); }
+		CUtlSymbolLarge FindSymbol(const char *pszText) const { return m_aSymbolTable.FindString(pszText); }
 
 	private:
 		CUtlSymbolTableLarge_CI m_aSymbolTable;
