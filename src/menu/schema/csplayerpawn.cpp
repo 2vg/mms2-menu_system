@@ -27,8 +27,6 @@
 #include <menusystem_plugin.hpp>
 #include <globals.hpp>
 
-#include <entity_manager.hpp>
-#include <entity_manager/provider/entitysystem.hpp>
 #include <entity2/entitysystem.h>
 #include <entity2/entitykeyvalues.h>
 #include <entity2/entityidentity.h>
@@ -70,66 +68,62 @@ void Menu::Schema::CCSPlayerPawn_Helper::CreatePointOrient(CCSPlayerPawn *pCSPla
 	if (!pCSPlayerPawn)
 		return;
 
-	// Use global entity manager provider agent
 	extern EntityManager::ProviderAgent *g_pEntityManagerProviderAgent;
 	if (!g_pEntityManagerProviderAgent)
 		return;
 
-	// Remove existing PointOrient if any
-	CPointOrient* pExistingOrient = GetPointOrient(pCSPlayerPawn);
-	if (pExistingOrient)
+	if (CPointOrient* pExisting = GetPointOrient(pCSPlayerPawn))
 	{
-		// Use entity manager to queue entity for destruction
-		g_pEntityManagerProviderAgent->PushDestroyQueue(pExistingOrient);
+		g_pEntityManagerProviderAgent->PushDestroyQueue(pExisting);
 		g_pEntityManagerProviderAgent->ExecuteDestroyQueued();
 		SetPointOrient(pCSPlayerPawn, nullptr);
 	}
 
-	// Get the entity system provider
 	auto *pEntitySystem = static_cast<EntityManager::CEntitySystemProvider*>(g_pEntityManagerProviderAgent->GetSystem());
 	if (!pEntitySystem)
 		return;
 
-	// Create new PointOrient entity using entity manager
-	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
-	pKeyValues->SetString("classname", "point_orient");
-	
-	// Create entity using the proper entity manager API
-	CEntityInstance* pEntityInstance = pEntitySystem->CreateEntity(INVALID_SPAWN_GROUP, "point_orient", EntityNetworkingMode_t::ENTITY_NETWORKING_MODE_NEVER, CEntityIndex(-1), -1, false);
-	if (!pEntityInstance)
-	{
-		delete pKeyValues;
-		return;
-	}
-
-	CPointOrient* pOrient = static_cast<CPointOrient*>(pEntityInstance);
-
-	// Configure PointOrient properties
-	CPointOrient_Helper::GetActiveAccessor(pOrient) = true;
-	CPointOrient_Helper::GetGoalDirectionAccessor(pOrient) = PointOrientGoalDirectionType_t::eEyesForward;
-
-	// Queue the entity for spawning using entity manager
-	pEntitySystem->QueueSpawnEntity(pEntityInstance->m_pEntity, pKeyValues);
-	pEntitySystem->ExecuteQueuedCreation();
-	
-	// Store the PointOrient handle
-	SetPointOrient(pCSPlayerPawn, pOrient);
-
-	// Get provider for proper API calls
 	extern MenuSystem_Plugin *g_pMenuPlugin;
 	auto &aBaseEntity = g_pMenuPlugin->GetGameDataStorage().GetBaseEntity();
 	auto &aBasePlayerPawn = g_pMenuPlugin->GetGameDataStorage().GetBasePlayerPawn();
 
-	// Position the PointOrient at player's eye position
-	Vector vecEyePosition = aBasePlayerPawn.GetEyePosition(pCSPlayerPawn);
-	aBaseEntity.Teleport(pOrient, vecEyePosition);
+	char targetName[64];
+	V_snprintf(targetName, sizeof(targetName), "ms_point_orient_%d", pCSPlayerPawn->GetEntityIndex().Get());
 
-	// Set parent and target to the player using proper variant_t
-	variant_t activatorVariant;
-	CEntityHandle playerHandle;
-	playerHandle.Set(pCSPlayerPawn);
-	activatorVariant = playerHandle;
-	
-	aBaseEntity.AcceptInput(pOrient, "SetParent", pCSPlayerPawn, pCSPlayerPawn, &activatorVariant, 0);
-	aBaseEntity.AcceptInput(pOrient, "SetTarget", pCSPlayerPawn, pCSPlayerPawn, &activatorVariant, 0);
+	CEntityKeyValues *pKV = new CEntityKeyValues();
+	pKV->SetString("classname", "point_orient");
+	pKV->SetString("targetname", targetName);
+
+	pEntitySystem->QueueSpawnEntity(nullptr, pKV);
+	pEntitySystem->ExecuteQueuedCreation();
+
+	CEntityInstance *pFound = g_pMenuPlugin->FindEntityByTargetName(targetName);
+	if (!pFound)
+	{
+		return;
+	}
+
+	CPointOrient *pOrient = static_cast<CPointOrient *>(pFound);
+
+	CPointOrient_Helper::GetActiveAccessor(pOrient) = true;
+	CPointOrient_Helper::GetGoalDirectionAccessor(pOrient) = PointOrientGoalDirectionType_t::eEyesForward;
+
+	Vector vecEye = aBasePlayerPawn.GetEyePosition(pCSPlayerPawn);
+	aBaseEntity.Teleport(pOrient, vecEye);
+
+	{
+		variant_t vParent;
+		CEntityHandle hPlayer;
+		hPlayer.Set(pCSPlayerPawn);
+		vParent = hPlayer;
+		aBaseEntity.AcceptInput(pOrient, "SetParent", pCSPlayerPawn, pCSPlayerPawn, &vParent, 0);
+	}
+
+	{
+		variant_t vTarget;
+		vTarget.SetString(targetName);
+		aBaseEntity.AcceptInput(pOrient, "SetTarget", pCSPlayerPawn, pCSPlayerPawn, &vTarget, 0);
+	}
+
+	SetPointOrient(pCSPlayerPawn, pOrient);
 }
