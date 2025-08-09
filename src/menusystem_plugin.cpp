@@ -3164,10 +3164,13 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						           &aConcat3 = g_aEmbed3Concat;
 	
 						CBufferStringN<1024> sBuffer;
+	
+						sBuffer.Append("Handle a chat command", -1);
+						sBuffer.Append(aConcat.GetEndsAndStartsWith(), -1);
+	
 						CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
 						CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
 	
-						aConcatBuffer.Append("Handle a chat command");
 						aConcatBuffer.Append("Player slot", aPlayerSlot.Get());
 						aConcatBuffer.Append("Is silent", bIsSilent);
 						aConcatBuffer.Append("Arguments");
@@ -3179,6 +3182,7 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 							// ...
 						}
 	
+						aConcatBuffer.AppendEnds();
 						CLogger::Detailed(sBuffer);
 					}
 
@@ -3389,9 +3393,14 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 
 		CBufferStringN<1024> sBuffer;
 
-		aConcat.AppendHead(sBuffer, sHead.Get());
-		aConcat.Append(sBuffer, "Destination", iDestination);
-		aConcat.Append(sBuffer, "Parameter", pszParam);
+		sBuffer.Append(sHead.Get(), -1);
+		sBuffer.Append(aConcat.GetEndsAndStartsWith(), -1);
+
+		CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
+		aConcatBuffer.Append("Destination", iDestination);
+		aConcatBuffer.Append("Parameter", pszParam);
+		aConcatBuffer.AppendEnds();
+		
 		CLogger::Detailed(sBuffer);
 	}
 
@@ -3677,11 +3686,15 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 
 		CBufferStringN<1024> sBuffer;
 
-		aConcat.AppendHead(sBuffer, aMessage.GetTypeName().c_str());
-		aConcat.Append(sBuffer, "Tick", GetGameGlobals()->tickcount);
-		aConcat.Append(sBuffer, "Player name", pClient->GetClientName());
-		aConcat.Append(sBuffer, "Command", pszFullCommand);
-		aConcat.Append(sBuffer, "Prediction sync", aMessage.prediction_sync());
+		sBuffer.Append(aMessage.GetTypeName().c_str(), -1);
+		sBuffer.Append(aConcat.GetEndsAndStartsWith(), -1);
+
+		CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
+		aConcatBuffer.Append("Tick", GetGameGlobals()->tickcount);
+		aConcatBuffer.Append("Player name", pClient->GetClientName());
+		aConcatBuffer.Append("Command", pszFullCommand);
+		aConcatBuffer.Append("Prediction sync", aMessage.prediction_sync());
+		aConcatBuffer.AppendEnds();
 
 		CLogger::Detailed(sBuffer);
 	}
@@ -4023,74 +4036,80 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 	// Dump runcmd proto.
 	if(m_aEnablePlayerRunCmdDetailsConVar.Get() && CLogger::IsChannelEnabled(LV_DETAILED))
 	{
-		const auto &aConcat = g_aEmbedConcat, 
-		           &aConcat2 = g_aEmbed2Concat, 
+		const auto &aConcat = g_aEmbedConcat,
+		           &aConcat2 = g_aEmbed2Concat,
 		           &aConcat3 = g_aEmbed3Concat;
 
 		CBufferStringN<2048> sBuffer;
 
-		aConcat.AppendHead(sBuffer, pMessage->GetTypeName().c_str());
-		aConcat.Append(sBuffer, "Base", pBaseUserCmd);
+		sBuffer.Append(pMessage->GetTypeName().c_str(), -1);
+		sBuffer.Append(aConcat.GetEndsAndStartsWith(), -1);
+
+		CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
+		aConcatBuffer.Append("Base", pBaseUserCmd);
 
 		if(pBaseUserCmd)
 		{
-			aConcat2.Append(sBuffer, "Legacy Command Number", pBaseUserCmd->legacy_command_number());
-			aConcat2.Append(sBuffer, "Client tick", pBaseUserCmd->client_tick());
+			CConcatLineBuffer aConcatBuffer2(&aConcat2, &sBuffer);
+			aConcatBuffer2.Append("Legacy Command Number", pBaseUserCmd->legacy_command_number());
+			aConcatBuffer2.Append("Client tick", pBaseUserCmd->client_tick());
 
 			if(pBaseUserCmd->has_buttons_pb())
 			{
-				aConcat2.Append(sBuffer, "Buttons PB");
+				aConcatBuffer2.Append( "Buttons PB");
 
 				const auto &aButtonsPB = pBaseUserCmd->buttons_pb();
 
-				aConcat3.Append(sBuffer, "State", (uint64)aButtonsPB.buttonstate1());
-				aConcat3.Append(sBuffer, "Changed", (uint64)aButtonsPB.buttonstate2());
-				aConcat3.Append(sBuffer, "Of scroll", (uint64)aButtonsPB.buttonstate3());
+				CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+				aConcatBuffer3.Append( "State", (uint64)aButtonsPB.buttonstate1());
+				aConcatBuffer3.Append( "Changed", (uint64)aButtonsPB.buttonstate2());
+				aConcatBuffer3.Append( "Of scroll", (uint64)aButtonsPB.buttonstate3());
 			}
 
 			if(pBaseUserCmd->has_viewangles())
 			{
 				const auto &aViewAnglesPB = pBaseUserCmd->viewangles();
 
-				aConcat2.Append(sBuffer, "View angles", QAngle(aViewAnglesPB.x(), aViewAnglesPB.y(), aViewAnglesPB.z()));
+				aConcatBuffer2.Append( "View angles", QAngle(aViewAnglesPB.x(), aViewAnglesPB.y(), aViewAnglesPB.z()));
 			}
 
-			aConcat2.Append(sBuffer, "Forward move", pBaseUserCmd->forwardmove());
-			aConcat2.Append(sBuffer, "Left move", pBaseUserCmd->leftmove());
-			aConcat2.Append(sBuffer, "Up move", pBaseUserCmd->upmove());
-			aConcat2.Append(sBuffer, "Impulse", pBaseUserCmd->impulse());
-			aConcat2.Append(sBuffer, "Weapon select", pBaseUserCmd->weaponselect());
-			aConcat2.Append(sBuffer, "Random seed", pBaseUserCmd->random_seed());
-			aConcat2.Append(sBuffer, "Mouse X", pBaseUserCmd->mousedx());
-			aConcat2.Append(sBuffer, "Mouse Y", pBaseUserCmd->mousedy());
-			aConcat2.Append(sBuffer, "Pawn entity handle", pBaseUserCmd->pawn_entity_handle());
+			aConcatBuffer2.Append( "Forward move", pBaseUserCmd->forwardmove());
+			aConcatBuffer2.Append( "Left move", pBaseUserCmd->leftmove());
+			aConcatBuffer2.Append( "Up move", pBaseUserCmd->upmove());
+			aConcatBuffer2.Append( "Impulse", pBaseUserCmd->impulse());
+			aConcatBuffer2.Append( "Weapon select", pBaseUserCmd->weaponselect());
+			aConcatBuffer2.Append( "Random seed", pBaseUserCmd->random_seed());
+			aConcatBuffer2.Append( "Mouse X", pBaseUserCmd->mousedx());
+			aConcatBuffer2.Append( "Mouse Y", pBaseUserCmd->mousedy());
+			aConcatBuffer2.Append( "Pawn entity handle", pBaseUserCmd->pawn_entity_handle());
 
 			const auto &aSubtickMoves = pBaseUserCmd->subtick_moves();
 			
 			if(aSubtickMoves.size())
 			{
-				aConcat2.Append(sBuffer, "Subtick moves");
+				aConcatBuffer2.Append( "Subtick moves");
 			}
 
 			// Subtick data.
+			CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
 			for(const auto &aSubtickMove : aSubtickMoves)
 			{
-				aConcat3.Append(sBuffer, "Button", (uint64)aSubtickMove.button());
-				aConcat3.Append(sBuffer, "Pressed", aSubtickMove.pressed());
-				aConcat3.Append(sBuffer, "When", aSubtickMove.when());
-				aConcat3.Append(sBuffer, "Analog forward delta", aSubtickMove.analog_forward_delta());
-				aConcat3.Append(sBuffer, "Analog left delta", aSubtickMove.analog_left_delta());
+				aConcatBuffer3.Append( "Button", (uint64)aSubtickMove.button());
+				aConcatBuffer3.Append( "Pressed", aSubtickMove.pressed());
+				aConcatBuffer3.Append( "When", aSubtickMove.when());
+				aConcatBuffer3.Append( "Analog forward delta", aSubtickMove.analog_forward_delta());
+				aConcatBuffer3.Append( "Analog left delta", aSubtickMove.analog_left_delta());
 			}
 
 			const auto &aMoveCRC = pBaseUserCmd->move_crc();
 
-			aConcat2.Append(sBuffer, "Move CRC", (const byte *)aMoveCRC.data(), aMoveCRC.size());
-			aConcat2.Append(sBuffer, "Consumed Server Angle Changes", pBaseUserCmd->consumed_server_angle_changes());
-			aConcat2.Append(sBuffer, "Flags", pBaseUserCmd->cmd_flags());
+			aConcatBuffer2.Append( "Move CRC", (const byte *)aMoveCRC.data(), aMoveCRC.size());
+			aConcatBuffer2.Append( "Consumed Server Angle Changes", pBaseUserCmd->consumed_server_angle_changes());
+			aConcatBuffer2.Append( "Flags", pBaseUserCmd->cmd_flags());
 		}
 
 		{
-			aConcat.Append(sBuffer, "Input history");
+			aConcatBuffer.Append( "Input history");
 
 			const auto &aInputHistory = pMessage->input_history();
 
@@ -4100,103 +4119,108 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 				{
 					const auto &aViewAnglesPB = aInput.view_angles();
 
-					aConcat2.Append(sBuffer, "View angles", QAngle(aViewAnglesPB.x(), aViewAnglesPB.y(), aViewAnglesPB.z()));
+					aConcatBuffer2.Append( "View angles", QAngle(aViewAnglesPB.x(), aViewAnglesPB.y(), aViewAnglesPB.z()));
 				}
 
-				aConcat2.Append(sBuffer, "Render tick count", aInput.render_tick_count());
-				aConcat2.Append(sBuffer, "Render tick fraction", aInput.render_tick_fraction());
-				aConcat2.Append(sBuffer, "Player tick count", aInput.player_tick_count());
-				aConcat2.Append(sBuffer, "Player tick fraction", aInput.player_tick_fraction());
+				aConcatBuffer2.Append( "Render tick count", aInput.render_tick_count());
+				aConcatBuffer2.Append( "Render tick fraction", aInput.render_tick_fraction());
+				aConcatBuffer2.Append( "Player tick count", aInput.player_tick_count());
+				aConcatBuffer2.Append( "Player tick fraction", aInput.player_tick_fraction());
 
 				if(aInput.has_cl_interp())
 				{
-					aConcat2.Append(sBuffer, "CL interpolation");
+					aConcatBuffer2.Append( "CL interpolation");
 
 					const auto &aCLInterp = aInput.cl_interp();
 
-					aConcat3.Append(sBuffer, "Fraction", aCLInterp.frac());
+					CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+					aConcatBuffer3.Append( "Fraction", aCLInterp.frac());
 				}
 
 				if(aInput.has_sv_interp0())
 				{
-					aConcat2.Append(sBuffer, "Server interpolation");
+					aConcatBuffer2.Append( "Server interpolation");
 
 					const auto &aSVInterpolation0 = aInput.sv_interp0();
 
-					aConcat3.Append(sBuffer, "Source tick", aSVInterpolation0.src_tick());
-					aConcat3.Append(sBuffer, "Destination tick", aSVInterpolation0.dst_tick());
-					aConcat3.Append(sBuffer, "Fraction", aSVInterpolation0.frac());
+					CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+					aConcatBuffer3.Append( "Source tick", aSVInterpolation0.src_tick());
+					aConcatBuffer3.Append( "Destination tick", aSVInterpolation0.dst_tick());
+					aConcatBuffer3.Append( "Fraction", aSVInterpolation0.frac());
 				}
 
 				if(aInput.has_sv_interp1())
 				{
-					aConcat2.Append(sBuffer, "Server interpolation (2)");
+					aConcatBuffer2.Append( "Server interpolation (2)");
 
 					const auto &aSVInterpolation1 = aInput.sv_interp1();
 
-					aConcat3.Append(sBuffer, "Source tick", aSVInterpolation1.src_tick());
-					aConcat3.Append(sBuffer, "Destination tick", aSVInterpolation1.dst_tick());
-					aConcat3.Append(sBuffer, "Fraction", aSVInterpolation1.frac());
+					CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+					aConcatBuffer3.Append( "Source tick", aSVInterpolation1.src_tick());
+					aConcatBuffer3.Append( "Destination tick", aSVInterpolation1.dst_tick());
+					aConcatBuffer3.Append( "Fraction", aSVInterpolation1.frac());
 				}
 
 				if(aInput.has_player_interp())
 				{
-					aConcat2.Append(sBuffer, "Player interpolation");
+					aConcatBuffer2.Append( "Player interpolation");
 
 					const auto &aPlayerInterpolation = aInput.player_interp();
 
-					aConcat3.Append(sBuffer, "Source tick", aPlayerInterpolation.src_tick());
-					aConcat3.Append(sBuffer, "Destination tick", aPlayerInterpolation.dst_tick());
-					aConcat3.Append(sBuffer, "Fraction", aPlayerInterpolation.frac());
+					CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+					aConcatBuffer3.Append( "Source tick", aPlayerInterpolation.src_tick());
+					aConcatBuffer3.Append( "Destination tick", aPlayerInterpolation.dst_tick());
+					aConcatBuffer3.Append( "Fraction", aPlayerInterpolation.frac());
 				}
 
-				aConcat2.Append(sBuffer, "Frame number", aInput.frame_number());
-				aConcat2.Append(sBuffer, "Target entity index", aInput.target_ent_index());
+				aConcatBuffer2.Append( "Frame number", aInput.frame_number());
+				aConcatBuffer2.Append( "Target entity index", aInput.target_ent_index());
 
 				if(aInput.has_shoot_position())
 				{
 					const auto &aVectorPB = aInput.shoot_position();
 
-					aConcat2.Append(sBuffer, "Shot position", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
+					aConcatBuffer2.Append( "Shot position", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
 				}
 
 				if(aInput.has_target_head_pos_check())
 				{
 					const auto &aVectorPB = aInput.target_head_pos_check();
 
-					aConcat2.Append(sBuffer, "Target head position check", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
+					aConcatBuffer2.Append( "Target head position check", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
 				}
 
 				if(aInput.has_target_abs_pos_check())
 				{
 					const auto &aVectorPB = aInput.target_abs_pos_check();
 
-					aConcat2.Append(sBuffer, "Target abs position check", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
+					aConcatBuffer2.Append( "Target abs position check", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
 				}
 
 				if(aInput.has_target_abs_ang_check())
 				{
 					const auto &aAnglesPB = aInput.target_abs_ang_check();
 
-					aConcat2.Append(sBuffer, "Target abs angles check", QAngle(aAnglesPB.x(), aAnglesPB.y(), aAnglesPB.z()));
+					aConcatBuffer2.Append( "Target abs angles check", QAngle(aAnglesPB.x(), aAnglesPB.y(), aAnglesPB.z()));
 				}
 			}
 		}
 
 		{
-			aConcat.Append(sBuffer, "Start History index attack", pMessage->attack1_start_history_index());
-			aConcat.Append(sBuffer, "Start History index attack (2)", pMessage->attack2_start_history_index());
-			aConcat.Append(sBuffer, "Start History index attack (3)", pMessage->attack3_start_history_index());
+			aConcatBuffer.Append( "Start History index attack", pMessage->attack1_start_history_index());
+			aConcatBuffer.Append( "Start History index attack (2)", pMessage->attack2_start_history_index());
+			aConcatBuffer.Append( "Start History index attack (3)", pMessage->attack3_start_history_index());
 		}
 
-		aConcat.Append(sBuffer, "Left hand desired", pMessage->left_hand_desired());
+		aConcatBuffer.Append( "Left hand desired", pMessage->left_hand_desired());
 
 		{
-			aConcat.Append(sBuffer, "Is predicting body shot FX", pMessage->is_predicting_body_shot_fx());
-			aConcat.Append(sBuffer, "Is predicting head shot FX", pMessage->is_predicting_head_shot_fx());
-			aConcat.Append(sBuffer, "Is predicting kill ragdolls", pMessage->is_predicting_kill_ragdolls());
+			aConcatBuffer.Append( "Is predicting body shot FX", pMessage->is_predicting_body_shot_fx());
+			aConcatBuffer.Append( "Is predicting head shot FX", pMessage->is_predicting_head_shot_fx());
+			aConcatBuffer.Append( "Is predicting kill ragdolls", pMessage->is_predicting_kill_ragdolls());
 		}
 
+		aConcatBuffer.AppendEnds();
 		CLogger::Detailed(sBuffer);
 	}
 
