@@ -21,6 +21,11 @@
 
 #include <menu/schema/csplayer_viewmodelservices.hpp>
 
+// Undefine Assert macro to avoid conflicts before including tier0 headers
+#ifdef Assert
+#undef Assert
+#endif
+#include <tier0/dbg.h>
 #include <schemasystem/schemasystem.h>
 
 void Menu::Schema::CCSPlayer_ViewModelServices_Helper::AddListeners(CSystem *pSchemaSystemHelper)

@@ -24,6 +24,12 @@
 
 #include <imenuprofilesystem.hpp>
 
+// Undefine Assert macro to avoid conflicts before including tier0 headers
+#ifdef Assert
+#undef Assert
+#endif
+#include <tier0/dbg.h>
+
 Menu::CProfile::CProfile::~CProfile()
 {
 	if(m_pItems)
