@@ -277,7 +277,8 @@ CEntityKeyValues *Menu::CProfile::LoadAllocatedEntityKeyValues(CProfileSystem *p
 
 		KeyValues3 *pMember = pData->GetMember(i);
 
-		KeyValues3 *pEKVMember = pResult->SetKeyValue({pData->GetMemberHash(i), pszMemberName});
+		EntityKeyId_t keyId(pData->GetMemberHash(i), UTL_INVAL_SYMBOL_LARGE, pszMemberName);
+		KeyValues3 *pEKVMember = pResult->SetKeyValue(keyId);
 
 		if(pEKVMember)
 		{

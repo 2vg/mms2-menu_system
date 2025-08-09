@@ -72,7 +72,7 @@
 
 SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandRef, const CCommandContext &, const CCommand &);
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t &, ISource2WorldSession *, const char *);
-SH_DECL_HOOK7_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo **, int, CBitVec<MAX_EDICTS> &, const Entity2Networkable_t **, const uint16 *, int, bool);
+SH_DECL_HOOK8_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo **, int, CBitVec<MAX_EDICTS> &, CBitVec<MAX_EDICTS> &, const Entity2Networkable_t **, const uint16 *, int, bool);
 SH_DECL_HOOK0_void(CNetworkGameServerBase, Release, SH_NOATTRIB, 0);
 SH_DECL_HOOK8(CNetworkGameServerBase, ConnectClient, SH_NOATTRIB, 0, CServerSideClientBase *, const char *, ns_address *, uint32, const C2S_CONNECT_Message &, const char *, const byte *, int, bool);
 SH_DECL_HOOK1(CServerSideClientBase, ExecuteStringCommand, SH_NOATTRIB, 0, bool, const CNETMsg_StringCmd_t &);
@@ -296,7 +296,7 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 		CBufferStringN<1024> sMessage;
 
 		sMessage.Insert(0, "Path resolver:\n");
-		g_aEmbedConcat.AppendToBuffer(sMessage, "Base game directory", m_sBaseGameDirectory.c_str());
+		CConcatLineBuffer(&g_aEmbedConcat, &sMessage).Append("Base game directory", m_sBaseGameDirectory.c_str());
 		CLogger::Detailed(sMessage);
 	}
 
@@ -2749,7 +2749,7 @@ bool MenuSystem_Plugin::ParseTranslations(char *error, size_t maxlen)
 			continue;
 		}
 
-		if(!Translations::Parse(aTranslationsConfig.Get(), vecSubmessages))
+		if(!Translations::Parse(aTranslationsConfig.Get(), nullptr, vecSubmessages))
 		{
 			aWarnings.PushFormat("\"%s\":", pszFilename);
 
@@ -2842,7 +2842,7 @@ bool MenuSystem_Plugin::ParseTranslations2(char *error, size_t maxlen)
 
 				KeyValues3 *pData = aTranslationsConfig.Get();
 
-				if(!Translations::Parse(pData, vecSubmessages))
+				if(!Translations::Parse(pData, nullptr, vecSubmessages))
 				{
 					aWarnings.PushFormat("\"%s\":", pszFilename);
 
@@ -4273,7 +4273,7 @@ CUtlSymbolLarge MenuSystem_Plugin::GetConVarSymbol(const char *pszName)
 
 CUtlSymbolLarge MenuSystem_Plugin::FindConVarSymbol(const char *pszName) const
 {
-	return m_tableConVars.Find(pszName);
+	return m_tableConVars.FindString(pszName);
 }
 
 CUtlSymbolLarge MenuSystem_Plugin::GetLanguageSymbol(const char *pszName)
@@ -4283,5 +4283,5 @@ CUtlSymbolLarge MenuSystem_Plugin::GetLanguageSymbol(const char *pszName)
 
 CUtlSymbolLarge MenuSystem_Plugin::FindLanguageSymbol(const char *pszName) const
 {
-	return m_tableLanguages.Find(pszName);
+	return m_tableLanguages.FindString(pszName);
 }

@@ -280,5 +280,5 @@ CUtlSymbolLarge Menu::CProfileSystem::GetSymbol(const char *pszName)
 
 CUtlSymbolLarge Menu::CProfileSystem::FindSymbol(const char *pszName) const
 {
-	return m_tableSymbols.Find(pszName);
+	return m_tableSymbols.FindString(pszName);
 }

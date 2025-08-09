@@ -29,4 +29,5 @@
 	url = https://github.com/Wend4r/s2u-logger.git
 [submodule "Translations"]
 	path = external/translations
-	url = https://github.com/Wend4r/s2u-translations.git
+	url = https://github.com/2vg/s2u-translations.git
+	branch = dev
