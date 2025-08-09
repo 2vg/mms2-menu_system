@@ -31,6 +31,11 @@
 #	include <algorithm>
 #endif // __cpp_lib_ranges
 
+// Undefine Assert macro to avoid conflicts before including tier0 headers
+#ifdef Assert
+#undef Assert
+#endif
+#include <tier0/dbg.h>
 #include <tier0/bufferstring.h>
 #include <tier0/commonmacros.h>
 #include <tier0/utlstringtoken.h>
