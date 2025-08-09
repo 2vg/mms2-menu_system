@@ -103,7 +103,7 @@ namespace Menu
 };
 
 class MenuSystem_Plugin final : public ISmmPlugin, public IMetamodListener, public IMenuSystem, public IMenuHandler, public CBaseGameSystem, public IEntityManager::IProviderAgent::ISpawnGroupNotifications, // Interfaces.
-                                virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBasePlayerPawn_Helper, virtual public Menu::Schema::CBasePlayerWeapon_Helper, virtual public Menu::Schema::CBasePlayerWeaponVData_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CCSWeaponBaseVData_Helper, virtual public Menu::Schema::CCSObserverPawn_Helper, virtual public Menu::Schema::CCSPlayer_ViewModelServices_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawn_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, virtual public Menu::Schema::CPlayer_ObserverServices_Helper, virtual public Menu::Schema::CPlayer_WeaponServices_Helper, virtual public Menu::Schema::CPointWorldText_Helper, // Schema helpers.
+                                virtual public Menu::Schema::CSystem, virtual public Menu::Schema::CBaseEntity_Helper, virtual public Menu::Schema::CBaseModelEntity_Helper, virtual public Menu::Schema::CBasePlayerController_Helper, virtual public Menu::Schema::CBasePlayerPawn_Helper, virtual public Menu::Schema::CBasePlayerWeapon_Helper, virtual public Menu::Schema::CBasePlayerWeaponVData_Helper, virtual public Menu::Schema::CBaseViewModel_Helper, virtual public Menu::Schema::CBodyComponent_Helper, virtual public Menu::Schema::CCSPlayerPawnBase_Helper, virtual public Menu::Schema::CCSWeaponBaseVData_Helper, virtual public Menu::Schema::CCSObserverPawn_Helper, virtual public Menu::Schema::CPointOrient_Helper, virtual public Menu::Schema::CCSPlayerBase_CameraServices_Helper, virtual public Menu::Schema::CCSPlayerPawn_Helper, virtual public Menu::Schema::CGameSceneNode_Helper, virtual public Menu::Schema::CPlayer_ObserverServices_Helper, virtual public Menu::Schema::CPlayer_WeaponServices_Helper, virtual public Menu::Schema::CPointWorldText_Helper, // Schema helpers.
                                 virtual public CLogger, public Translations, public Menu::CPathResolver, public Menu::CProvider, // Components.
                                 public Menu::CGameEventManager2System, public Menu::CChatSystem, public Menu::CProfileSystem // Subsystems.
 {
@@ -145,6 +145,9 @@ public: // IMenuSystem
 	CGameSystemEventDispatcher **GetGameSystemEventDispatcherPointer() const override;
 	CGameSystemEventDispatcher *GetOutOfGameEventDispatcher() const override;
 	IGameEventManager2 **GetGameEventManagerPointer() const override;
+
+	// Accessor to hide private member while exposing interface type
+	IEntityManager::IProviderAgent *GetEntityManagerProviderAgent() const;
 
 	class CLanguage : public IMenuSystem::ILanguage
 	{

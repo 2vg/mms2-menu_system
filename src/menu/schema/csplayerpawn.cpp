@@ -1,0 +1,127 @@
+/**
+ * vim: set ts=4 sw=4 tw=99 noet :
+ * ======================================================
+ * Metamod:Source Menu System
+ * Written by Wend4r & komashchenko (Vladimir Ezhikov & Borys Komashchenko).
+ * ======================================================
+
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.pbaseentity
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include "ientitymgr.hpp"
+
+#include <menu/schema/baseentity.hpp>
+#include <menu/schema/csplayerpawn.hpp>
+#include <menu/schema/cpointorient.hpp>
+#include <menu/schema.hpp>
+#include <menu/provider.hpp>
+#include <menusystem_plugin.hpp>
+#include <globals.hpp>
+
+#include <entity2/entitysystem.h>
+#include <entity2/entitykeyvalues.h>
+#include <entity2/entityidentity.h>
+#include <mathlib/vector.h>
+#include <mathlib/mathlib.h>
+#include <variant.h>
+#include <ehandle.h>
+
+#include "ientitymgr.hpp"
+
+// Static storage for PointOrient handles per player
+CHandle<CPointOrient> Menu::Schema::CCSPlayerPawn_Helper::s_aPlayerPointOrients[64];
+
+void Menu::Schema::CCSPlayerPawn_Helper::AddListeners(CSystem *pSchemaSystemHelper)
+{
+	// Call both base class AddListeners methods
+	CCSPlayerPawnBase_Helper::AddListeners(pSchemaSystemHelper);
+	CPointOrient_Helper::AddListeners(pSchemaSystemHelper);
+}
+
+void Menu::Schema::CCSPlayerPawn_Helper::SetPointOrient(CCSPlayerPawn *pCSPlayerPawn, CPointOrient *pOrient)
+{
+	if (!pCSPlayerPawn)
+		return;
+
+	int nPlayerSlot = pCSPlayerPawn->GetEntityIndex().Get() % 64; // Simple slot calculation
+	s_aPlayerPointOrients[nPlayerSlot].Set(pOrient);
+}
+
+CPointOrient* Menu::Schema::CCSPlayerPawn_Helper::GetPointOrient(CCSPlayerPawn *pCSPlayerPawn)
+{
+	if (!pCSPlayerPawn)
+		return nullptr;
+
+	int nPlayerSlot = pCSPlayerPawn->GetEntityIndex().Get() % 64; // Simple slot calculation
+	return s_aPlayerPointOrients[nPlayerSlot].Get();
+}
+
+void Menu::Schema::CCSPlayerPawn_Helper::CreatePointOrient(CCSPlayerPawn *pCSPlayerPawn)
+{
+	if (!pCSPlayerPawn)
+		return;
+
+	// Access EntityManager provider agent via plugin accessor instead of global extern
+	extern MenuSystem_Plugin *g_pMenuPlugin;
+	IEntityManager::IProviderAgent *g_pEntityManagerProviderAgent = g_pMenuPlugin ? g_pMenuPlugin->GetEntityManagerProviderAgent() : nullptr;
+	if (!g_pEntityManagerProviderAgent)
+		return;
+
+	if (CPointOrient* pExisting = GetPointOrient(pCSPlayerPawn))
+	{
+		g_pEntityManagerProviderAgent->PushDestroyQueue(pExisting);
+		g_pEntityManagerProviderAgent->ExecuteDestroyQueued();
+		SetPointOrient(pCSPlayerPawn, nullptr);
+	}
+
+	extern MenuSystem_Plugin *g_pMenuPlugin;
+	auto &aBaseEntity = g_pMenuPlugin->GetGameDataStorage().GetBaseEntity();
+	auto &aBasePlayerPawn = g_pMenuPlugin->GetGameDataStorage().GetBasePlayerPawn();
+
+	char targetName[64];
+	V_snprintf(targetName, sizeof(targetName), "ms_point_orient_%d", pCSPlayerPawn->GetEntityIndex().Get());
+
+	CEntityKeyValues *pKV = new CEntityKeyValues();
+	pKV->SetString("classname", "point_orient");
+	pKV->SetString("targetname", targetName);
+
+	CUtlVector<CEntityKeyValues *> vecKV;
+	vecKV.AddToTail(pKV);
+	CUtlVector<CEntityInstance *> vecOut;
+	g_pMenuPlugin->SpawnEntities(vecKV, &vecOut, nullptr);
+
+	if (vecOut.Count() < 1 || vecOut[0] == nullptr)
+	{
+		if (pKV) delete pKV;
+		return;
+	}
+
+	CPointOrient *pOrient = static_cast<CPointOrient *>(vecOut[0]);
+
+	CPointOrient_Helper::GetActiveAccessor(pOrient) = true;
+	CPointOrient_Helper::GetGoalDirectionAccessor(pOrient) = PointOrientGoalDirectionType_t::eEyesForward;
+
+	Vector vecEye = aBasePlayerPawn.GetEyePosition(pCSPlayerPawn);
+	aBaseEntity.Teleport(pOrient, vecEye);
+
+	{
+		variant_t vParent;
+		CEntityHandle hPlayer;
+		hPlayer.Set(pCSPlayerPawn);
+		vParent = hPlayer;
+		aBaseEntity.AcceptInput(pOrient, "SetParent", pCSPlayerPawn, pCSPlayerPawn, &vParent, 0);
+	}
+
+	SetPointOrient(pCSPlayerPawn, pOrient);
+}

@@ -25,11 +25,12 @@
 #	pragma once
 
 #	include <menu/schema/csplayerpawnbase.hpp>
+#	include <menu/schema/cpointorient.hpp>
 #	include <menu/schema.hpp>
 
 #	define CCSPLAYERPAWN_CLASS_NAME "CCSPlayerPawn"
 
-class CCSPlayer_ViewModelServices;
+class CPointOrient;
 
 class CCSPlayerPawn : public CCSPlayerPawnBase
 {
@@ -39,16 +40,23 @@ namespace Menu
 {
 	namespace Schema
 	{
-		class CCSPlayerPawn_Helper : virtual public CCSPlayerPawnBase_Helper
+		class CCSPlayerPawn_Helper : virtual public CCSPlayerPawnBase_Helper, virtual public CPointOrient_Helper
 		{
 		public:
 			using Base = CCSPlayerPawnBase_Helper;
+			using PointOrientBase = CPointOrient_Helper;
 
 		public:
-			auto GetViewModelServicesAccessor(CCSPlayerPawn *pCSPlayerPawn)
-			{
-				return Base::GetViewModelServicesAccessor(pCSPlayerPawn).Cast<CCSPlayer_ViewModelServices *>();
-			}
+			void AddListeners(CSystem *pSchemaSystemHelper);
+			
+			// PointOrient management methods
+			void SetPointOrient(CCSPlayerPawn *pCSPlayerPawn, CPointOrient *pOrient);
+			CPointOrient* GetPointOrient(CCSPlayerPawn *pCSPlayerPawn);
+			void CreatePointOrient(CCSPlayerPawn *pCSPlayerPawn);
+
+		private:
+			// Store PointOrient handle per player
+			static CHandle<CPointOrient> s_aPlayerPointOrients[64]; // Max 64 players
 
 		// private:
 		// 	CSystem::CClass *m_pClass;
