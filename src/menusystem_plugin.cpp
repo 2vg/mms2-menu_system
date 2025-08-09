@@ -21,6 +21,7 @@
 
 #include <menusystem_plugin.hpp>
 #include <menu/profile.hpp>
+#include <menu/schema/cpointorient.hpp>
 #include <globals.hpp>
 #include <math.hpp>
 
@@ -131,7 +132,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 		CCSPlayerPawnBase_Helper::AddListeners(pSchemaHelper);
 		CCSWeaponBaseVData_Helper::AddListeners(pSchemaHelper);
 		CCSObserverPawn_Helper::AddListeners(pSchemaHelper);
-		CCSPlayer_ViewModelServices_Helper::AddListeners(pSchemaHelper);
+		CPointOrient_Helper::AddListeners(pSchemaHelper);
 		CCSPlayerBase_CameraServices_Helper::AddListeners(pSchemaHelper);
 		CCSPlayerPawn_Helper::AddListeners(pSchemaHelper);
 		CGameSceneNode_Helper::AddListeners(pSchemaHelper);
@@ -2151,27 +2152,22 @@ bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu
 {
 	auto &aBaseEntity = GetGameDataStorage().GetBaseEntity();
 
-	auto aViewModelServicesAccessor = CCSPlayerPawn_Helper::GetViewModelServicesAccessor(pTarget);
-
-	CCSPlayer_ViewModelServices *pCSPlayerViewModelServices = aViewModelServicesAccessor;
-
-	if(!pCSPlayerViewModelServices)
+	// Get or create PointOrient for the player
+	CPointOrient *pOrient = CCSPlayerPawn_Helper::GetPointOrient(pTarget);
+	if (!pOrient)
 	{
-		CLogger::WarningFormat("Failed to get a player view model services\n");
+		CCSPlayerPawn_Helper::CreatePointOrient(pTarget);
+		pOrient = CCSPlayerPawn_Helper::GetPointOrient(pTarget);
+	}
+
+	if (!pOrient)
+	{
+		CLogger::WarningFormat("Failed to get or create a player point orient\n");
 
 		return false;
 	}
 
-	// 0 - the main one.
-	// 1 - the hostages.
-	// 2 - the extra one.
-	static constexpr int s_nExtraViewModelSlot = 2;
-
 	auto aParentVariant = variant_t("!activator");
-
-	CHandle<CBaseViewModel> &hPlayerViewModel = CCSPlayer_ViewModelServices_Helper::GetViewModelAccessor(pCSPlayerViewModelServices)[s_nExtraViewModelSlot];
-
-	CBaseViewModel *pPlayerViewModel = hPlayerViewModel.Get();
 
 	Vector vecMenuAbsOriginBackground {},
 	       vecMenuAbsOrigin {};
@@ -2197,19 +2193,13 @@ bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu
 		CLogger::Detailed(sBuffer);
 	}
 
-	if(!pPlayerViewModel)
-	{
-		auto *pExtraPlayerViewModel = SpawnViewModelEntity(vecMenuAbsOrigin, angMenuRotation, pTarget, s_nExtraViewModelSlot);
-
-		hPlayerViewModel.Set(pExtraPlayerViewModel);
-		pPlayerViewModel = pExtraPlayerViewModel;
-	}
-
-	aBaseEntity.AcceptInput(pPlayerViewModel, "FollowEntity", pTarget, NULL, &aParentVariant, 0);
+	// Use PointOrient position and rotation
+	Vector origin = pOrient->GetAbsOrigin();
+	QAngle orientAngles = pOrient->GetAbsRotation();
 
 	if(CLogger::IsChannelEnabled(LV_DETAILED))
 	{
-		CLogger::DetailedFormat("Player view model: \"%s\" (%d)\n", pPlayerViewModel->GetClassname(), pPlayerViewModel->GetEntityIndex().Get());
+		CLogger::DetailedFormat("Player point orient: \"%s\" (%d)\n", pOrient->GetClassname(), pOrient->GetEntityIndex().Get());
 	}
 
 	const auto &vecEntities = pInternalMenu->GetActiveEntities();
@@ -2219,10 +2209,10 @@ bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu
 		auto *pEntity = vecEntities[i];
 
 		aBaseEntity.Teleport(pEntity, i ? vecMenuAbsOrigin : vecMenuAbsOriginBackground, angMenuRotation);
-		aBaseEntity.AcceptInput(pEntity, "SetParent", pPlayerViewModel, NULL, &aParentVariant, 0);
+		aBaseEntity.AcceptInput(pEntity, "SetParent", pOrient, NULL, &aParentVariant, 0);
 	}
 
-	aViewModelServicesAccessor.MarkNetworkChanged(); // Update CCSPlayer_ViewModelServices < CPlayer_ViewModelServices state of the view model entities.
+	// No need to mark network changed for PointOrient as it's handled automatically
 
 	return true;
 }
