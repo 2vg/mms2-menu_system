@@ -23,7 +23,7 @@
 
 void Menu::Schema::CPointOrient_Helper::AddListeners(CSystem *pSchemaSystemHelper)
 {
-	m_pClass = pSchemaSystemHelper->FindSchemaClassBinding(CPOINTORIENT_CLASS_NAME);
+	m_pClass = pSchemaSystemHelper->GetClass(CPOINTORIENT_CLASS_NAME);
 
 	CSystem::CClass::Fields::CListenerCallbacksCollector aCallbacks;
 
@@ -40,5 +40,5 @@ void Menu::Schema::CPointOrient_Helper::AddListeners(CSystem *pSchemaSystemHelpe
 
 void Menu::Schema::CPointOrient_Helper::Clear()
 {
-	m_aClassFieldsClassbacks.Clear();
+	m_aOffsets = {};
 }

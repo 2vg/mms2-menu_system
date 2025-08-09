@@ -28,6 +28,8 @@
 #	include <menu/schema.hpp>
 
 #	include <tier0/utlsymbol.h>
+#	include <ehandle.h>
+# include <entity2/entitysystem.h>
 
 #	define CPOINTORIENT_CLASS_NAME "CPointOrient"
 
