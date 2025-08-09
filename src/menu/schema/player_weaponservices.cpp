@@ -21,6 +21,7 @@
 
 #include <menu/schema/player_weaponservices.hpp>
 
+#include <tier0/dbg.h>
 #include <schemasystem/schemasystem.h>
 
 void Menu::Schema::CPlayer_WeaponServices_Helper::AddListeners(CSystem *pSchemaSystemHelper)

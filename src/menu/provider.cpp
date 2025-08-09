@@ -23,6 +23,7 @@
 #include <globals.hpp>
 
 #include <filesystem.h>
+#include <tier0/dbg.h>
 #include <tier0/commonmacros.h>
 #include <tier0/keyvalues3.h>
 #include <tier0/strtools.h>
@@ -116,7 +117,7 @@ CUtlSymbolLarge Menu::CProvider::GetSymbol(const char *pszText)
 
 CUtlSymbolLarge Menu::CProvider::FindSymbol(const char *pszText) const
 {
-	return m_aSymbolTable.Find(pszText);
+	return m_aSymbolTable.FindString(pszText);
 }
 
 bool Menu::CProvider::LoadGameData(const char *pszBaseGameDir, const char *pszPathID, GameData::CStringVector &vecMessages)

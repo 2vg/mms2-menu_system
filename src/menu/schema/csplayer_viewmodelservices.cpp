@@ -21,6 +21,7 @@
 
 #include <menu/schema/csplayer_viewmodelservices.hpp>
 
+#include <tier0/dbg.h>
 #include <schemasystem/schemasystem.h>
 
 void Menu::Schema::CCSPlayer_ViewModelServices_Helper::AddListeners(CSystem *pSchemaSystemHelper)

@@ -21,6 +21,7 @@
 
 #include <menu/schema/pointworldtext.hpp>
 
+#include <tier0/dbg.h>
 #include <schemasystem/schemasystem.h>
 
 void Menu::Schema::CPointWorldText_Helper::AddListeners(CSystem *pSchemaSystemHelper)

@@ -21,6 +21,8 @@
 
 #include <menu/provider.hpp>
 
+#include <cassert>
+
 Menu::CProvider::CGameDataStorage::CUserCmd::CUserCmd()
  :  m_pCmds(nullptr), 
     m_pRead(nullptr), 
@@ -51,21 +53,21 @@ void Menu::CProvider::CGameDataStorage::CUserCmd::Reset()
 
 CCSGOUserCmd *Menu::CProvider::CGameDataStorage::CUserCmd::Get() const
 {
-	Assert(m_pCmds);
+	assert(m_pCmds);
 
 	return m_pCmds;
 }
 
 void Menu::CProvider::CGameDataStorage::CUserCmd::Read(CBasePlayerController *pController, CCSGOUserCmd *pMessage) const
 {
-	Assert(m_pRead);
+	assert(m_pRead);
 
 	m_pRead(pController, pMessage);
 }
 
 void Menu::CProvider::CGameDataStorage::CUserCmd::ProcessWithPlayerController(CBasePlayerController *pController, CCSGOUserCmd *cmds, int numcmds, bool paused, float margin) const
 {
-	Assert(m_pProcessWithPlayerController);
+	assert(m_pProcessWithPlayerController);
 
 	m_pProcessWithPlayerController(pController, cmds, numcmds, paused, margin);
 }

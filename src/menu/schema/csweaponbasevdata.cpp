@@ -21,6 +21,7 @@
 
 #include <menu/schema/csweaponbasevdata.hpp>
 
+#include <tier0/dbg.h>
 #include <schemasystem/schemasystem.h>
 
 void Menu::Schema::CCSWeaponBaseVData_Helper::AddListeners(CSystem *pSchemaSystemHelper)

@@ -21,6 +21,7 @@
 
 #include <menu/schema/gamescenenode.hpp>
 
+#include <tier0/dbg.h>
 #include <schemasystem/schemasystem.h>
 
 void Menu::Schema::CGameSceneNode_Helper::AddListeners(CSystem *pSchemaSystemHelper)

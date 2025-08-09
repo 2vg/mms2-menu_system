@@ -23,6 +23,7 @@
 #include <menu/profile.hpp>
 
 #include <filesystem.h>
+#include <tier0/dbg.h>
 #include <tier1/keyvalues3.h>
 #include <tier1/utlrbtree.h>
 #include <tier1/utlmap.h>
@@ -279,5 +280,5 @@ CUtlSymbolLarge Menu::CProfileSystem::GetSymbol(const char *pszName)
 
 CUtlSymbolLarge Menu::CProfileSystem::FindSymbol(const char *pszName) const
 {
-	return m_tableSymbols.Find(pszName);
+	return m_tableSymbols.FindString(pszName);
 }

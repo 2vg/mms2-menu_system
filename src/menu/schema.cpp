@@ -31,6 +31,20 @@
 #	include <algorithm>
 #endif // __cpp_lib_ranges
 
+// Ensure HL2SDK Assert macros are not shadowed
+#ifdef assert
+#	undef assert
+#endif
+#ifdef Assert
+#	undef Assert
+#endif
+
+#include <tier0/platform.h>
+#include <tier0/dbg.h>
+#include <cassert>
+#ifndef Assert
+#	define Assert assert
+#endif
 #include <tier0/bufferstring.h>
 #include <tier0/commonmacros.h>
 #include <tier0/utlstringtoken.h>
@@ -48,6 +62,9 @@
 	Assert(messagesVar); \
 	\
 	const auto *concatVar = GetConcatLine(); \
+
+#define SCHEMA_DETAILS_CONCAT_BUFFER(concatVar, bufferVar) \
+	CConcatLineBuffer concatVar##Buffer(concatVar, &bufferVar); \
 	\
 	Assert(concatVar);
 
@@ -141,8 +158,9 @@ void Menu::Schema::CSystem::CDetailsConcatTypeScope::AppendHeader()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CHugeBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
-	pConcat->AppendStringHeadToBuffer(sBuffer, m_pData->m_szScopeName);
+	pConcatBuffer.Append<true, false>(m_pData->m_szScopeName);
 	pMessages->AddToTail(sBuffer);
 }
 
@@ -151,26 +169,27 @@ void Menu::Schema::CSystem::CDetailsConcatTypeScope::AppendMembers()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CHugeBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
 	auto *pTypeScope = m_pData;
 
-	pConcat->AppendToBuffer(sBuffer, "Count of classes", pTypeScope->m_DeclaredClasses.m_Map.Count());
+	pConcatBuffer.Append("Count of classes", pTypeScope->m_DeclaredClasses.m_Map.Count());
 	pMessages->AddToTail(sBuffer);
 	sBuffer.Clear();
 
-	pConcat->AppendToBuffer(sBuffer, "Count of enums", pTypeScope->m_DeclaredEnums.m_Map.Count());
+	pConcatBuffer.Append("Count of enums", pTypeScope->m_DeclaredEnums.m_Map.Count());
 	pMessages->AddToTail(sBuffer);
 	sBuffer.Clear();
 
-	pConcat->AppendToBuffer(sBuffer, "Count of atomic infos", pTypeScope->m_AtomicInfos.m_Map.Count());
+	pConcatBuffer.Append("Count of atomic infos", pTypeScope->m_AtomicInfos.m_Map.Count());
 	pMessages->AddToTail(sBuffer);
 	sBuffer.Clear();
 
-	pConcat->AppendToBuffer(sBuffer, "Count of fixed arrays", pTypeScope->m_FixedArrays.m_Map.Count());
+	pConcatBuffer.Append("Count of fixed arrays", pTypeScope->m_FixedArrays.m_Map.Count());
 	pMessages->AddToTail(sBuffer);
 	sBuffer.Clear();
 
-	pConcat->AppendToBuffer(sBuffer, "Count of bitfields", pTypeScope->m_Bitfields.m_Map.Count());
+	pConcatBuffer.Append("Count of bitfields", pTypeScope->m_Bitfields.m_Map.Count());
 	pMessages->AddToTail(sBuffer);
 }
 
@@ -179,8 +198,9 @@ void Menu::Schema::CSystem::CDetailsConcatTypeScope::AppendClasses()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CTinyBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
-	pConcat->AppendToBuffer(sBuffer, "Classes");
+	pConcatBuffer.Append("Classes");
 	pMessages->AddToTail(sBuffer);
 }
 
@@ -189,8 +209,9 @@ void Menu::Schema::CSystem::CDetailsConcatType::AppendHeader()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CSmallBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
-	pConcat->AppendHeadToBuffer(sBuffer, "Type");
+	pConcatBuffer.Append<false, false>("Type");
 	pMessages->AddToTail(sBuffer);
 }
 
@@ -199,6 +220,7 @@ void Menu::Schema::CSystem::CDetailsConcatType::AppendMembers()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CHugeBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
 	auto *pType = m_pData;
 
@@ -206,7 +228,7 @@ void Menu::Schema::CSystem::CDetailsConcatType::AppendMembers()
 		CBufferStringN<MAX_SCHEMA_TYPE_NAME_SIZE> sName;
 
 		pType->ToString(sName, true);
-		pConcat->AppendStringToBuffer(sBuffer, "Name", sName.Get());
+		pConcatBuffer.Append<false, true>("Name", sName.Get());
 		pMessages->AddToTail(sBuffer);
 		sBuffer.Clear();
 	}
@@ -217,11 +239,11 @@ void Menu::Schema::CSystem::CDetailsConcatType::AppendMembers()
 
 		pType->GetSizeAndAlignment(nSize, nAlignment);
 
-		pConcat->AppendToBuffer(sBuffer, "Size", nSize);
+		pConcatBuffer.Append("Size", nSize);
 		pMessages->AddToTail(sBuffer);
 		sBuffer.Clear();
 
-		pConcat->AppendToBuffer(sBuffer, "Alignment", nAlignment);
+		pConcatBuffer.Append("Alignment", nAlignment);
 		pMessages->AddToTail(sBuffer);
 	}
 }
@@ -231,8 +253,9 @@ void Menu::Schema::CSystem::CDetailsConcatClass::AppendHeader()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CSmallBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
-	pConcat->AppendStringHeadToBuffer(sBuffer, m_pData->m_pszName);
+	pConcatBuffer.Append<true, false>(m_pData->m_pszName);
 	pMessages->AddToTail(sBuffer);
 }
 
@@ -241,26 +264,27 @@ void Menu::Schema::CSystem::CDetailsConcatClass::AppendMembers()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CHugeBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
 	auto *pInfo = m_pData;
 
-	pConcat->AppendStringToBuffer(sBuffer, "Project name", pInfo->m_pszProjectName);
+	pConcatBuffer.Append<false, true>("Project name", pInfo->m_pszProjectName);
 	pMessages->AddToTail(sBuffer);
 	sBuffer.Clear();
 
-	pConcat->AppendToBuffer(sBuffer, "Size", pInfo->m_nSize);
+	pConcatBuffer.Append("Size", pInfo->m_nSize);
 	pMessages->AddToTail(sBuffer);
 	sBuffer.Clear();
 
-	pConcat->AppendToBuffer(sBuffer, "Count of fields", pInfo->m_nFieldCount);
+	pConcatBuffer.Append("Count of fields", pInfo->m_nFieldCount);
 	pMessages->AddToTail(sBuffer);
 	sBuffer.Clear();
 
-	pConcat->AppendToBuffer(sBuffer, "Count of static fields", pInfo->m_nStaticFieldCount);
+	pConcatBuffer.Append("Count of static fields", pInfo->m_nStaticFieldCount);
 	pMessages->AddToTail(sBuffer);
 	sBuffer.Clear();
 
-	pConcat->AppendToBuffer(sBuffer, "Alignment", pInfo->m_nAlignment);
+	pConcatBuffer.Append("Alignment", pInfo->m_nAlignment);
 	pMessages->AddToTail(sBuffer);
 }
 
@@ -269,8 +293,9 @@ void Menu::Schema::CSystem::CDetailsConcatClass::AppendBaseClasses()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CSmallBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
-	pConcat->AppendToBuffer(sBuffer, "Base classes");
+	pConcatBuffer.Append("Base classes");
 	pMessages->AddToTail(sBuffer);
 }
 
@@ -279,8 +304,9 @@ void Menu::Schema::CSystem::CDetailsConcatClass::AppendFields()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CSmallBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
-	pConcat->AppendToBuffer(sBuffer, "Fields");
+	pConcatBuffer.Append("Fields");
 	pMessages->AddToTail(sBuffer);
 }
 
@@ -289,8 +315,9 @@ void Menu::Schema::CSystem::CDetailsConcatField::AppendHeader()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CXLargeBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
-	pConcat->AppendStringHeadToBuffer(sBuffer, m_pData->m_pszName);
+	pConcatBuffer.Append<true, false>(m_pData->m_pszName);
 	pMessages->AddToTail(sBuffer);
 }
 
@@ -299,8 +326,9 @@ void Menu::Schema::CSystem::CDetailsConcatField::AppendMembers()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CTinyBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
-	pConcat->AppendToBuffer(sBuffer, "Offset", m_pData->m_nSingleInheritanceOffset);
+	pConcatBuffer.Append("Offset", m_pData->m_nSingleInheritanceOffset);
 	pMessages->AddToTail(sBuffer);
 }
 
@@ -309,8 +337,9 @@ void Menu::Schema::CSystem::CDetailsConcatField::AppendMetadataMember()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CHugeBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
-	pConcat->AppendToBuffer(sBuffer, "Metadata");
+	pConcatBuffer.Append("Metadata");
 	pMessages->AddToTail(sBuffer);
 }
 
@@ -319,14 +348,15 @@ void Menu::Schema::CSystem::CDetailsConcatMetadataEntry::AppendHeader()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CHugeBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
 	if(m_pData->m_pData)
 	{
-		pConcat->AppendStringHeadToBuffer(sBuffer, m_pData->m_pszName);
+		pConcatBuffer.Append<true, false>(m_pData->m_pszName);
 	}
 	else
 	{
-		pConcat->AppendStringHeadWithoutBeforeToBuffer(sBuffer, m_pData->m_pszName);
+		pConcatBuffer.Append<true, true>(m_pData->m_pszName);
 	}
 
 	pMessages->AddToTail(sBuffer);
@@ -337,6 +367,7 @@ void Menu::Schema::CSystem::CDetailsConcatMetadataEntry::AppendMembers()
 	SCHEMA_DETAILS_CONCAT_DECLARE_VARIABLES(pMessages, pConcat);
 
 	CHugeBufferString sBuffer;
+	SCHEMA_DETAILS_CONCAT_BUFFER(pConcat, sBuffer);
 
 	void *pData = m_pData->m_pData;
 
@@ -368,59 +399,59 @@ void Menu::Schema::CSystem::CDetailsConcatMetadataEntry::AppendMembers()
 #ifdef __cpp_lib_ranges
 		if(std::ranges::find(s_arrSchemaMetadataHash_Integer, nNameHash) != s_arrSchemaMetadataHash_Integer.cend())
 		{
-			pConcat->AppendToBuffer(sBuffer, szConcatKey, pDataT->nValue);
+			pConcatBuffer.Append(szConcatKey, pDataT->nValue);
 			pMessages->AddToTail(sBuffer);
 		}
 		else if(std::ranges::find(s_arrSchemaMetadataHash_Float, nNameHash) != s_arrSchemaMetadataHash_Float.cend())
 		{
-			pConcat->AppendToBuffer(sBuffer, szConcatKey, pDataT->nValue);
+			pConcatBuffer.Append(szConcatKey, pDataT->nValue);
 			pMessages->AddToTail(sBuffer);
 		}
 		else if(std::ranges::find(s_arrSchemaMetadataHash_String, nNameHash) != s_arrSchemaMetadataHash_String.cend())
 		{
-			pConcat->AppendStringToBuffer(sBuffer, szConcatKey, pDataT->pszValue);
+			pConcatBuffer.Append<false, true>(szConcatKey, pDataT->pszValue);
 			pMessages->AddToTail(sBuffer);
 		}
 		else if(std::ranges::find(s_arrSchemaMetadataHash_BufferString, nNameHash) != s_arrSchemaMetadataHash_BufferString.cend())
 		{
-			pConcat->AppendStringToBuffer(sBuffer, szConcatKey, pDataT->sValue.Get());
+			pConcatBuffer.Append<false, true>(szConcatKey, pDataT->sValue.Get());
 			pMessages->AddToTail(sBuffer);
 		}
 		else if(std::ranges::find(s_arrSchemaMetadataHash_VarName, nNameHash) != s_arrSchemaMetadataHash_VarName.cend())
 		{
-			pConcat->AppendStringToBuffer(sBuffer, pDataT->m_aKeyValue.pszVar, pDataT->m_aKeyValue.pszName);
+			pConcatBuffer.Append<false, true>(pDataT->m_aKeyValue.pszVar, pDataT->m_aKeyValue.pszName);
 			pMessages->AddToTail(sBuffer);
 		}
 #else
 		if(std::find(s_arrSchemaMetadataHash_Integer.cbegin(), s_arrSchemaMetadataHash_Integer.cend(), nNameHash) != s_arrSchemaMetadataHash_Integer.cend())
 		{
-			pConcat->AppendToBuffer(sBuffer, szConcatKey, pDataT->nValue);
+			pConcatBuffer.Append(szConcatKey, pDataT->nValue);
 			pMessages->AddToTail(sBuffer);
 		}
 		else if(std::find(s_arrSchemaMetadataHash_Float.cbegin(), s_arrSchemaMetadataHash_Float.cend(), nNameHash) != s_arrSchemaMetadataHash_Float.cend())
 		{
-			pConcat->AppendToBuffer(sBuffer, szConcatKey, pDataT->nValue);
+			pConcatBuffer.Append(szConcatKey, pDataT->nValue);
 			pMessages->AddToTail(sBuffer);
 		}
 		else if(std::find(s_arrSchemaMetadataHash_String.cbegin(), s_arrSchemaMetadataHash_String.cend(), nNameHash) != s_arrSchemaMetadataHash_String.cend())
 		{
-			pConcat->AppendStringToBuffer(sBuffer, szConcatKey, pDataT->pszValue);
+			pConcatBuffer.Append<false, true>(szConcatKey, pDataT->pszValue);
 			pMessages->AddToTail(sBuffer);
 		}
 		else if(std::find(s_arrSchemaMetadataHash_BufferString.cbegin(), s_arrSchemaMetadataHash_BufferString.cend(), nNameHash) != s_arrSchemaMetadataHash_BufferString.cend())
 		{
-			pConcat->AppendStringToBuffer(sBuffer, szConcatKey, pDataT->sValue.Get());
+			pConcatBuffer.Append<false, true>(szConcatKey, pDataT->sValue.Get());
 			pMessages->AddToTail(sBuffer);
 		}
 		else if(std::find(s_arrSchemaMetadataHash_VarName.cbegin(), s_arrSchemaMetadataHash_VarName.cend(), nNameHash) != s_arrSchemaMetadataHash_VarName.cend())
 		{
-			pConcat->AppendKeyStringValueStringToBuffer(sBuffer, pDataT->m_aKeyValue.pszVar, pDataT->m_aKeyValue.pszName);
+			pConcatBuffer.Append<true, true>(pDataT->m_aKeyValue.pszVar, pDataT->m_aKeyValue.pszName);
 			pMessages->AddToTail(sBuffer);
 		}
 #endif
 		else
 		{
-			pConcat->AppendPointerToBuffer(sBuffer, szConcatKey, pData);
+			pConcatBuffer.Append(szConcatKey, reinterpret_cast<void*>(pData));
 			pMessages->AddToTail(sBuffer);
 		}
 	}
@@ -583,7 +614,7 @@ CUtlSymbolLarge Menu::Schema::CSystem::CClass::GetFieldSymbol(const char *pszNam
 
 CUtlSymbolLarge Menu::Schema::CSystem::CClass::FindFieldSymbol(const char *pszName) const
 {
-	return m_tableFileds.Find(pszName);
+	return m_tableFileds.FindString(pszName);
 }
 
 Menu::Schema::CSystem::CClass *Menu::Schema::CSystem::GetClass(const char *pszName)
@@ -599,10 +630,11 @@ Menu::Schema::CSystem::CClass *Menu::Schema::CSystem::GetClass(const char *pszNa
 
 	if(!m_mapClasses.IsValidIndex(iFound))
 	{
-		iFound = m_mapClasses.Insert(sSymbol, {});
+		auto *pClass = new CClass();
+		iFound = m_mapClasses.Insert(sSymbol, pClass);
 	}
 
-	return &m_mapClasses[iFound];
+	return m_mapClasses[iFound];
 }
 
 Menu::Schema::CSystem::CClass *Menu::Schema::CSystem::FindClass(const char *pszName)
@@ -621,7 +653,7 @@ Menu::Schema::CSystem::CClass *Menu::Schema::CSystem::FindClass(const char *pszN
 		return nullptr;
 	}
 
-	return &m_mapClasses[iFound];
+	return m_mapClasses[iFound];
 }
 
 int Menu::Schema::CSystem::FindClassFieldOffset(const char *pszClassName, const char *pszFiledName)
@@ -702,6 +734,12 @@ void Menu::Schema::CSystem::LoadClasses(CSchemaSystemTypeScope *pScope, ClassDet
 
 void Menu::Schema::CSystem::ClearClasses()
 {
+	// Delete all CClass pointers before purging the map
+	FOR_EACH_MAP_FAST(m_mapClasses, i)
+	{
+		delete m_mapClasses[i];
+	}
+	
 	m_tableClasses.Purge();
 	m_mapClasses.Purge();
 }
@@ -713,5 +751,5 @@ CUtlSymbolLarge Menu::Schema::CSystem::GetClassSymbol(const char *pszName)
 
 CUtlSymbolLarge Menu::Schema::CSystem::FindClassSymbol(const char *pszName) const
 {
-	return m_tableClasses.Find(pszName);
+	return m_tableClasses.FindString(pszName);
 }

@@ -46,7 +46,7 @@ public:
 	using Interface_t = IMenu;
 
 	CMenuAllocator(int nGrowSize = 0, int nInitSize = 16, RawAllocatorType_t eAllocatorType = RawAllocator_Standard)
-	 :  m_vecMemBlocks(nGrowSize, nInitSize, eAllocatorType),
+	 :  m_vecMemBlocks(nInitSize, nGrowSize),
 	    m_MemBlockAllocator((nInitSize > 0) ? ABSOLUTE_PLAYER_LIMIT : 0, PAGE_SIZE, eAllocatorType)
 	{
 	}
@@ -232,7 +232,7 @@ private:
 	using MemBlocksVec_t = CUtlVector_RawAllocator<MemBlock_t>;
 
 	MemBlocksVec_t m_vecMemBlocks;
-	CUtlMemoryBlockAllocator m_MemBlockAllocator;
+	CUtlMemoryBlockAllocator<CInstance_t> m_MemBlockAllocator;
 };
 
 #endif // _INCLUDE_METAMOD_SOURCE_MENUALLOCATOR_HPP_

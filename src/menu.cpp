@@ -29,16 +29,16 @@
 
 #include <utility>
 
+#include <tier0/dbg.h>
 #include <entity2/entitykeyvalues.h>
 
 const CConcatLineString g_aMenuConcat = ConcatLine_t<const char *>
 {
-	"",     // Heads with.
 	"",     // Starts with.
 	"",     // Before key.
 	". ",   // Between key & value.
 	"\n",   // Ends.
-	"\n\n"  // Ends every title.
+	"\n\n"  // Ends and starts with.
 };
 
 CMenu::CMenu(const CPointWorldText_Helper *pSchemaHelper, const CGameData_BaseEntity *pGameData, IMenuProfile *pProfile, IMenuHandler *pHandler, CMenuData_t::ControlItems_t *pControls)
@@ -511,8 +511,8 @@ void CMenu::CPageBase::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlo
 		{
 			const char *pszTitleText = aTitleText.Get();
 
-			aConcat.AppendToBuffer(m_sText, pszTitleText);
-			aConcat.AppendEndsToBuffer(m_sText);
+			CConcatLineBuffer(&aConcat, &m_sText).Append(pszTitleText);
+			CConcatLineBuffer(&aConcat, &m_sText).AppendEnds();
 		}
 	}
 
@@ -560,11 +560,11 @@ void CMenu::CPageBase::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlo
 			if(eItemStyle & MENU_ITEM_HASNUMBER)
 			{
 				szItemNumber[0] = '1' + (i - iStartPosition);
-				aConcat.AppendToBuffer(m_sText, szItemNumber, pszItemContent);
+				CConcatLineBuffer(&aConcat, &m_sText).Append(szItemNumber, pszItemContent);
 			}
 			else
 			{
-				aConcat.AppendToBuffer(m_sText, pszItemContent);
+				CConcatLineBuffer(&aConcat, &m_sText).Append(pszItemContent);
 			}
 		}
 
@@ -573,7 +573,7 @@ void CMenu::CPageBase::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlo
 
 		if(nControlsSum && pControlItems)
 		{
-			aConcat.AppendEndsToBuffer(m_sText);
+			CConcatLineBuffer(&aConcat, &m_sText).AppendEnds();
 
 			auto aControlItems = *pControlItems;
 
@@ -609,7 +609,7 @@ void CMenu::CPageBase::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlo
 				{
 					if(bSkipControlItem)
 					{
-						aConcat.AppendEndsToBuffer(m_sText);
+						CConcatLineBuffer(&aConcat, &m_sText).AppendEnds();
 					}
 					else
 					{
@@ -620,12 +620,12 @@ void CMenu::CPageBase::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlo
 							szItemNumber[0] -= 10;
 						}
 
-						aConcat.AppendToBuffer(m_sText, szItemNumber, pszItemContent);
+						CConcatLineBuffer(&aConcat, &m_sText).Append(szItemNumber, pszItemContent);
 					}
 				}
 				else
 				{
-					aConcat.AppendToBuffer(m_sText, pszItemContent);
+					CConcatLineBuffer(&aConcat, &m_sText).Append(pszItemContent);
 				}
 			}
 		}
@@ -663,13 +663,13 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 		{
 			const char *pszTitleText = aTitleText.Get();
 
-			aConcat.AppendToBuffer(m_sText, pszTitleText);
-			aConcat.AppendEndsToBuffer(m_sText);
-			aConcat.AppendToBuffer(m_sInactiveText, pszTitleText);
-			aConcat.AppendEndsToBuffer(m_sInactiveText);
-			aConcat.AppendEndsAndStartsToBuffer(m_sActiveText);
-			aConcat.AppendToBuffer(m_sDisabledActiveText, pszTitleText);
-			aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
+			CConcatLineBuffer(&aConcat, &m_sText).Append(pszTitleText);
+			CConcatLineBuffer(&aConcat, &m_sText).AppendEnds();
+			CConcatLineBuffer(&aConcat, &m_sInactiveText).Append(pszTitleText);
+			CConcatLineBuffer(&aConcat, &m_sInactiveText).AppendEnds();
+			CConcatLineBuffer(&aConcat, &m_sActiveText).AppendEndsAndStartsWith();
+			CConcatLineBuffer(&aConcat, &m_sDisabledActiveText).Append(pszTitleText);
+			CConcatLineBuffer(&aConcat, &m_sDisabledActiveText).AppendEnds();
 		}
 	}
 
@@ -717,36 +717,36 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 			if(eItemStyle & MENU_ITEM_HASNUMBER)
 			{
 				szItemNumber[0] = '1' + (i - iStartPosition);
-				aConcat.AppendToBuffer(m_sText, szItemNumber, pszItemContent);
+				CConcatLineBuffer(&aConcat, &m_sText).Append(szItemNumber, pszItemContent);
 
 				if(eItemStyle & MENU_ITEM_ACTIVE)
 				{
-					aConcat.AppendEndsToBuffer(m_sInactiveText);
-					aConcat.AppendToBuffer(m_sActiveText, szItemNumber, pszItemContent);
-					aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
+					CConcatLineBuffer(&aConcat, &m_sInactiveText).AppendEnds();
+					CConcatLineBuffer(&aConcat, &m_sActiveText).Append(szItemNumber, pszItemContent);
+					CConcatLineBuffer(&aConcat, &m_sDisabledActiveText).AppendEnds();
 				}
 				else
 				{
-					aConcat.AppendToBuffer(m_sInactiveText, szItemNumber, pszItemContent);
-					aConcat.AppendEndsToBuffer(m_sActiveText);
-					aConcat.AppendToBuffer(m_sDisabledActiveText, szItemNumber, pszItemContent);
+					CConcatLineBuffer(&aConcat, &m_sInactiveText).Append(szItemNumber, pszItemContent);
+					CConcatLineBuffer(&aConcat, &m_sActiveText).AppendEnds();
+					CConcatLineBuffer(&aConcat, &m_sDisabledActiveText).Append(szItemNumber, pszItemContent);
 				}
 			}
 			else
 			{
-				aConcat.AppendToBuffer(m_sText, pszItemContent);
+				CConcatLineBuffer(&aConcat, &m_sText).Append(pszItemContent);
 
 				if(eItemStyle & MENU_ITEM_ACTIVE)
 				{
-					aConcat.AppendEndsToBuffer(m_sInactiveText);
-					aConcat.AppendToBuffer(m_sActiveText, pszItemContent);
-					aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
+					CConcatLineBuffer(&aConcat, &m_sInactiveText).AppendEnds();
+					CConcatLineBuffer(&aConcat, &m_sActiveText).Append(pszItemContent);
+					CConcatLineBuffer(&aConcat, &m_sDisabledActiveText).AppendEnds();
 				}
 				else
 				{
-					aConcat.AppendToBuffer(m_sInactiveText, pszItemContent);
-					aConcat.AppendEndsToBuffer(m_sActiveText);
-					aConcat.AppendToBuffer(m_sDisabledActiveText, pszItemContent);
+					CConcatLineBuffer(&aConcat, &m_sInactiveText).Append(pszItemContent);
+					CConcatLineBuffer(&aConcat, &m_sActiveText).AppendEnds();
+					CConcatLineBuffer(&aConcat, &m_sDisabledActiveText).Append(pszItemContent);
 				}
 			}
 		}
@@ -756,10 +756,10 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 
 		if(nControlsSum && pControlItems)
 		{
-			aConcat.AppendEndsToBuffer(m_sText);
-			aConcat.AppendEndsToBuffer(m_sInactiveText);
-			aConcat.AppendEndsToBuffer(m_sActiveText);
-			aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
+			CConcatLineBuffer(&aConcat, &m_sText).AppendEnds();
+			CConcatLineBuffer(&aConcat, &m_sInactiveText).AppendEnds();
+			CConcatLineBuffer(&aConcat, &m_sActiveText).AppendEnds();
+			CConcatLineBuffer(&aConcat, &m_sDisabledActiveText).AppendEnds();
 
 			auto aControlItems = *pControlItems;
 
@@ -795,7 +795,7 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 				{
 					if(bSkipControlItem)
 					{
-						aConcat.AppendEndsToBuffer(m_sText);
+						CConcatLineBuffer(&aConcat, &m_sText).AppendEnds();
 					}
 					else
 					{
@@ -806,71 +806,71 @@ void CMenu::CPage::Render(IMenu *pMenu, CMenuData_t &aData, CPlayerSlot aSlot, I
 							szItemNumber[0] -= 10;
 						}
 
-						aConcat.AppendToBuffer(m_sText, szItemNumber, pszItemContent);
+						CConcatLineBuffer(&aConcat, &m_sText).Append(szItemNumber, pszItemContent);
 					}
 
 					if(eItemStyle & MENU_ITEM_ACTIVE)
 					{
-						aConcat.AppendEndsToBuffer(m_sInactiveText);
+						CConcatLineBuffer(&aConcat, &m_sInactiveText).AppendEnds();
 
 						if(bSkipControlItem)
 						{
-							aConcat.AppendEndsToBuffer(m_sActiveText);
+							CConcatLineBuffer(&aConcat, &m_sActiveText).AppendEnds();
 						}
 						else
 						{
-							aConcat.AppendToBuffer(m_sActiveText, szItemNumber, pszItemContent);
+							CConcatLineBuffer(&aConcat, &m_sActiveText).Append(szItemNumber, pszItemContent);
 						}
 
-						aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
+						CConcatLineBuffer(&aConcat, &m_sDisabledActiveText).AppendEnds();
 					}
 					else
 					{
 						if(bSkipControlItem)
 						{
-							aConcat.AppendToBuffer(m_sInactiveText, szItemNumber, pszItemContent);
+							CConcatLineBuffer(&aConcat, &m_sInactiveText).Append(szItemNumber, pszItemContent);
 						}
 						else
 						{
-							aConcat.AppendEndsToBuffer(m_sInactiveText);
+							CConcatLineBuffer(&aConcat, &m_sInactiveText).AppendEnds();
 						}
 
-						aConcat.AppendEndsToBuffer(m_sActiveText);
-						aConcat.AppendToBuffer(m_sDisabledActiveText, szItemNumber, pszItemContent);
+						CConcatLineBuffer(&aConcat, &m_sActiveText).AppendEnds();
+						CConcatLineBuffer(&aConcat, &m_sDisabledActiveText).Append(szItemNumber, pszItemContent);
 					}
 				}
 				else
 				{
-					aConcat.AppendToBuffer(m_sText, pszItemContent);
+					CConcatLineBuffer(&aConcat, &m_sText).Append(pszItemContent);
 
 					if(eItemStyle & MENU_ITEM_ACTIVE)
 					{
-						aConcat.AppendEndsToBuffer(m_sInactiveText);
+						CConcatLineBuffer(&aConcat, &m_sInactiveText).AppendEnds();
 
 						if(bSkipControlItem)
 						{
-							aConcat.AppendEndsToBuffer(m_sActiveText);
+							CConcatLineBuffer(&aConcat, &m_sActiveText).AppendEnds();
 						}
 						else
 						{
-							aConcat.AppendToBuffer(m_sActiveText, pszItemContent);
+							CConcatLineBuffer(&aConcat, &m_sActiveText).Append(pszItemContent);
 						}
 
-						aConcat.AppendEndsToBuffer(m_sDisabledActiveText);
+						CConcatLineBuffer(&aConcat, &m_sDisabledActiveText).AppendEnds();
 					}
 					else
 					{
 						if(bSkipControlItem)
 						{
-							aConcat.AppendEndsToBuffer(m_sInactiveText);
+							CConcatLineBuffer(&aConcat, &m_sInactiveText).AppendEnds();
 						}
 						else
 						{
-							aConcat.AppendToBuffer(m_sInactiveText, pszItemContent);
+							CConcatLineBuffer(&aConcat, &m_sInactiveText).Append(pszItemContent);
 						}
 
-						aConcat.AppendEndsToBuffer(m_sActiveText);
-						aConcat.AppendToBuffer(m_sDisabledActiveText, pszItemContent);
+						CConcatLineBuffer(&aConcat, &m_sActiveText).AppendEnds();
+						CConcatLineBuffer(&aConcat, &m_sDisabledActiveText).Append(pszItemContent);
 					}
 				}
 			}

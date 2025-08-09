@@ -46,6 +46,7 @@
 #include <recipientfilter.h>
 #include <serversideclient.h>
 #include <shareddefs.h>
+#include <tier0/dbg.h>
 #include <tier0/commonmacros.h>
 #include <tier0/utlstringtoken.h>
 #include <tier0/memalloc.h>
@@ -71,7 +72,7 @@
 
 SH_DECL_HOOK3_void(ICvar, DispatchConCommand, SH_NOATTRIB, 0, ConCommandRef, const CCommandContext &, const CCommand &);
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t &, ISource2WorldSession *, const char *);
-SH_DECL_HOOK7_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo **, int, CBitVec<MAX_EDICTS> &, const Entity2Networkable_t **, const uint16 *, int, bool);
+SH_DECL_HOOK8_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo **, int, CBitVec<MAX_EDICTS> &, CBitVec<MAX_EDICTS> &, const Entity2Networkable_t **, const uint16 *, int, bool);
 SH_DECL_HOOK0_void(CNetworkGameServerBase, Release, SH_NOATTRIB, 0);
 SH_DECL_HOOK8(CNetworkGameServerBase, ConnectClient, SH_NOATTRIB, 0, CServerSideClientBase *, const char *, ns_address *, uint32, const C2S_CONNECT_Message &, const char *, const byte *, int, bool);
 SH_DECL_HOOK1(CServerSideClientBase, ExecuteStringCommand, SH_NOATTRIB, 0, bool, const CNETMsg_StringCmd_t &);
@@ -117,7 +118,7 @@ MenuSystem_Plugin::MenuSystem_Plugin()
 {
 	// Adds schema listeners.
 	{
-		Menu::Schema::CSystem *pSchemaHelper = schema_system_cast(this);
+		Menu::Schema::CSystem *pSchemaHelper = static_cast<Menu::Schema::CSystem*>(this);
 	
 		CBaseEntity_Helper::AddListeners(pSchemaHelper);
 		CBaseModelEntity_Helper::AddListeners(pSchemaHelper);
@@ -295,7 +296,7 @@ bool MenuSystem_Plugin::Load(PluginId id, ISmmAPI *ismm, char *error, size_t max
 		CBufferStringN<1024> sMessage;
 
 		sMessage.Insert(0, "Path resolver:\n");
-		g_aEmbedConcat.AppendToBuffer(sMessage, "Base game directory", m_sBaseGameDirectory.c_str());
+		CConcatLineBuffer(&g_aEmbedConcat, &sMessage).Append("Base game directory", m_sBaseGameDirectory.c_str());
 		CLogger::Detailed(sMessage);
 	}
 
@@ -1770,9 +1771,10 @@ bool MenuSystem_Plugin::InitEntityManager(char *error, size_t maxlen)
 
 void MenuSystem_Plugin::DumpEntityManager(const CConcatLineString &aConcat, CBufferString &sOutput)
 {
-	GLOBALS_APPEND_VARIABLE(aConcat, m_pEntityManager);
-	GLOBALS_APPEND_VARIABLE(aConcat, m_pEntityManagerProviderAgent);
-	GLOBALS_APPEND_VARIABLE(aConcat, m_pEntityManagerSpawnGroupProvider);
+	CConcatLineBuffer aConcatBuffer(&aConcat, &sOutput);
+	GLOBALS_APPEND_VARIABLE(aConcatBuffer, m_pEntityManager);
+	GLOBALS_APPEND_VARIABLE(aConcatBuffer, m_pEntityManagerProviderAgent);
+	GLOBALS_APPEND_VARIABLE(aConcatBuffer, m_pEntityManagerSpawnGroupProvider);
 }
 
 bool MenuSystem_Plugin::UnloadEntityManager(char *error, size_t maxlen)
@@ -2186,10 +2188,11 @@ bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu
 		const auto &aConcat = g_aEmbedConcat;
 
 		CBufferStringN<256> sBuffer;
+		CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
 
-		aConcat.AppendHeadToBuffer(sBuffer, "Menu entities position");
-		aConcat.AppendToBuffer(sBuffer, "Origin", vecMenuAbsOrigin);
-		aConcat.AppendToBuffer(sBuffer, "Rotation", angMenuRotation);
+		aConcatBuffer.Append("Menu entities position");
+		aConcatBuffer.Append("Origin", vecMenuAbsOrigin);
+		aConcatBuffer.Append("Rotation", angMenuRotation);
 
 		CLogger::Detailed(sBuffer);
 	}
@@ -2748,7 +2751,7 @@ bool MenuSystem_Plugin::ParseTranslations(char *error, size_t maxlen)
 			continue;
 		}
 
-		if(!Translations::Parse(aTranslationsConfig.Get(), vecSubmessages))
+		if(!Translations::Parse(aTranslationsConfig.Get(), nullptr, vecSubmessages))
 		{
 			aWarnings.PushFormat("\"%s\":", pszFilename);
 
@@ -2841,7 +2844,7 @@ bool MenuSystem_Plugin::ParseTranslations2(char *error, size_t maxlen)
 
 				KeyValues3 *pData = aTranslationsConfig.Get();
 
-				if(!Translations::Parse(pData, vecSubmessages))
+				if(!Translations::Parse(pData, nullptr, vecSubmessages))
 				{
 					aWarnings.PushFormat("\"%s\":", pszFilename);
 
@@ -3165,21 +3168,27 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						const auto &aConcat = g_aEmbedConcat,
 						           &aConcat2 = g_aEmbed2Concat,
 						           &aConcat3 = g_aEmbed3Concat;
-
+	
 						CBufferStringN<1024> sBuffer;
-
-						aConcat.AppendHeadToBuffer(sBuffer, "Handle a chat command");
-						aConcat.AppendToBuffer(sBuffer, "Player slot", aPlayerSlot.Get());
-						aConcat.AppendToBuffer(sBuffer, "Is silent", bIsSilent);
-						aConcat.AppendToBuffer(sBuffer, "Arguments");
-
+	
+						sBuffer.Append("Handle a chat command", -1);
+						sBuffer.Append(aConcat.GetEndsAndStartsWith(), -1);
+	
+						CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
+						CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+	
+						aConcatBuffer.Append("Player slot", aPlayerSlot.Get());
+						aConcatBuffer.Append("Is silent", bIsSilent);
+						aConcatBuffer.Append("Arguments");
+	
 						for(const auto &sArg : vecArgs)
 						{
-							aConcat3.AppendStringHeadToBuffer(sBuffer, sArg.Get());
-
+							aConcatBuffer3.Append<true>(sArg.Get());
+	
 							// ...
 						}
-
+	
+						aConcatBuffer.AppendEnds();
 						CLogger::Detailed(sBuffer);
 					}
 
@@ -3230,10 +3239,10 @@ CServerSideClientBase *MenuSystem_Plugin::OnConnectClientHook(const char *pszNam
 	RETURN_META_VALUE(MRES_IGNORED, NULL);
 }
 
-void MenuSystem_Plugin::OnCheckTransmitHook(CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, 
+void MenuSystem_Plugin::OnCheckTransmitHook(CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, CBitVec<MAX_EDICTS> &bvUnknown,
                                             const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits)
 {
-	OnCheckTransmit(META_IFACEPTR(ISource2GameEntities), ppInfoList, nInfoCount, bvUnionTransmitEdicts, pNetworkables, pEntityIndicies, nEntities, bEnablePVSBits);
+	OnCheckTransmit(META_IFACEPTR(ISource2GameEntities), ppInfoList, nInfoCount, bvUnionTransmitEdicts, bvUnknown, pNetworkables, pEntityIndicies, nEntities, bEnablePVSBits);
 
 	RETURN_META(MRES_IGNORED);
 }
@@ -3277,12 +3286,13 @@ void MenuSystem_Plugin::SendSetConVarMessage(IRecipientFilter *pFilter, CUtlVect
 		const auto &aConcat = g_aEmbedConcat;
 
 		CBufferStringN<1024> sBuffer;
+		CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
 
-		aConcat.AppendHeadToBuffer(sBuffer, pSetConVarMessage->GetUnscopedName());
+		aConcatBuffer.Append(pSetConVarMessage->GetUnscopedName());
 
 		for(const auto &[pszName, pszValue] : vecCvars)
 		{
-			aConcat.AppendKeyStringValueStringToBuffer(sBuffer, pszName, pszValue);
+			aConcatBuffer.Append<true, true>(pszName, pszValue);
 		}
 
 		CLogger::Detailed(sBuffer);
@@ -3334,30 +3344,31 @@ void MenuSystem_Plugin::SendChatMessage(IRecipientFilter *pFilter, int iEntityIn
 		sHead.Insert(sHead.Length(), ")");
 
 		CBufferStringN<1024> sBuffer;
+		CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
 
-		aConcat.AppendHeadToBuffer(sBuffer, sHead.Get());
-		aConcat.AppendToBuffer(sBuffer, "Entity index", iEntityIndex);
-		aConcat.AppendToBuffer(sBuffer, "Is chat", bIsChat);
-		aConcat.AppendStringToBuffer(sBuffer, "Chat message", pszChatMessageFormat);
+		aConcatBuffer.Append(sHead.Get());
+		aConcatBuffer.Append("Entity index", iEntityIndex);
+		aConcatBuffer.Append("Is chat", bIsChat);
+		aConcatBuffer.Append<false, true>("Chat message", pszChatMessageFormat);
 
 		if(pszParam1 && *pszParam1)
 		{
-			aConcat.AppendStringToBuffer(sBuffer, "Parameter #1", pszParam1);
+			aConcatBuffer.Append<false, true>("Parameter #1", pszParam1);
 		}
 
 		if(pszParam2 && *pszParam2)
 		{
-			aConcat.AppendStringToBuffer(sBuffer, "Parameter #2", pszParam2);
+			aConcatBuffer.Append<false, true>("Parameter #2", pszParam2);
 		}
 
 		if(pszParam3 && *pszParam3)
 		{
-			aConcat.AppendStringToBuffer(sBuffer, "Parameter #3", pszParam3);
+			aConcatBuffer.Append<false, true>("Parameter #3", pszParam3);
 		}
 
 		if(pszParam4 && *pszParam4)
 		{
-			aConcat.AppendStringToBuffer(sBuffer, "Parameter #4", pszParam4);
+			aConcatBuffer.Append<false, true>("Parameter #4", pszParam4);
 		}
 
 		CLogger::Detailed(sBuffer);
@@ -3394,9 +3405,14 @@ void MenuSystem_Plugin::SendTextMessage(IRecipientFilter *pFilter, int iDestinat
 
 		CBufferStringN<1024> sBuffer;
 
-		aConcat.AppendHeadToBuffer(sBuffer, sHead.Get());
-		aConcat.AppendToBuffer(sBuffer, "Destination", iDestination);
-		aConcat.AppendToBuffer(sBuffer, "Parameter", pszParam);
+		sBuffer.Append(sHead.Get(), -1);
+		sBuffer.Append(aConcat.GetEndsAndStartsWith(), -1);
+
+		CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
+		aConcatBuffer.Append("Destination", iDestination);
+		aConcatBuffer.Append("Parameter", pszParam);
+		aConcatBuffer.AppendEnds();
+		
 		CLogger::Detailed(sBuffer);
 	}
 
@@ -3622,7 +3638,7 @@ void MenuSystem_Plugin::OnConnectClient(CNetworkGameServerBase *pNetServer, CSer
 	aPlayer.OnConnected(pPlayer);
 }
 
-void MenuSystem_Plugin::OnCheckTransmit(ISource2GameEntities *pGameEntities, CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits)
+void MenuSystem_Plugin::OnCheckTransmit(ISource2GameEntities *pGameEntities, CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, CBitVec<MAX_EDICTS> &bvUnknown, const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits)
 {
 	// if(CLogger::IsChannelEnabled(LV_DETAILED))
 	// {
@@ -3682,11 +3698,15 @@ META_RES MenuSystem_Plugin::OnExecuteStringCommandPre(CServerSideClientBase *pCl
 
 		CBufferStringN<1024> sBuffer;
 
-		aConcat.AppendHeadToBuffer(sBuffer, aMessage.GetTypeName().c_str());
-		aConcat.AppendToBuffer(sBuffer, "Tick", GetGameGlobals()->tickcount);
-		aConcat.AppendStringToBuffer(sBuffer, "Player name", pClient->GetClientName());
-		aConcat.AppendStringToBuffer(sBuffer, "Command", pszFullCommand);
-		aConcat.AppendToBuffer(sBuffer, "Prediction sync", aMessage.prediction_sync());
+		sBuffer.Append(aMessage.GetTypeName().c_str(), -1);
+		sBuffer.Append(aConcat.GetEndsAndStartsWith(), -1);
+
+		CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
+		aConcatBuffer.Append("Tick", GetGameGlobals()->tickcount);
+		aConcatBuffer.Append("Player name", pClient->GetClientName());
+		aConcatBuffer.Append("Command", pszFullCommand);
+		aConcatBuffer.Append("Prediction sync", aMessage.prediction_sync());
+		aConcatBuffer.AppendEnds();
 
 		CLogger::Detailed(sBuffer);
 	}
@@ -4028,180 +4048,192 @@ bool MenuSystem_Plugin::ProcessUserCmd(CServerSideClientBase *pClient, CCSGOUser
 	// Dump runcmd proto.
 	if(m_aEnablePlayerRunCmdDetailsConVar.Get() && CLogger::IsChannelEnabled(LV_DETAILED))
 	{
-		const auto &aConcat = g_aEmbedConcat, 
-		           &aConcat2 = g_aEmbed2Concat, 
+		const auto &aConcat = g_aEmbedConcat,
+		           &aConcat2 = g_aEmbed2Concat,
 		           &aConcat3 = g_aEmbed3Concat;
 
 		CBufferStringN<2048> sBuffer;
 
-		aConcat.AppendHeadToBuffer(sBuffer, pMessage->GetTypeName().c_str());
-		aConcat.AppendPointerToBuffer(sBuffer, "Base", pBaseUserCmd);
+		sBuffer.Append(pMessage->GetTypeName().c_str(), -1);
+		sBuffer.Append(aConcat.GetEndsAndStartsWith(), -1);
+
+		CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
+		aConcatBuffer.Append("Base", pBaseUserCmd);
 
 		if(pBaseUserCmd)
 		{
-			aConcat2.AppendToBuffer(sBuffer, "Legacy Command Number", pBaseUserCmd->legacy_command_number());
-			aConcat2.AppendToBuffer(sBuffer, "Client tick", pBaseUserCmd->client_tick());
+			CConcatLineBuffer aConcatBuffer2(&aConcat2, &sBuffer);
+			aConcatBuffer2.Append("Legacy Command Number", pBaseUserCmd->legacy_command_number());
+			aConcatBuffer2.Append("Client tick", pBaseUserCmd->client_tick());
 
 			if(pBaseUserCmd->has_buttons_pb())
 			{
-				aConcat2.AppendToBuffer(sBuffer, "Buttons PB");
+				aConcatBuffer2.Append( "Buttons PB");
 
 				const auto &aButtonsPB = pBaseUserCmd->buttons_pb();
 
-				aConcat3.AppendToBuffer(sBuffer, "State", (uint64)aButtonsPB.buttonstate1());
-				aConcat3.AppendToBuffer(sBuffer, "Changed", (uint64)aButtonsPB.buttonstate2());
-				aConcat3.AppendToBuffer(sBuffer, "Of scroll", (uint64)aButtonsPB.buttonstate3());
+				CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+				aConcatBuffer3.Append( "State", (uint64)aButtonsPB.buttonstate1());
+				aConcatBuffer3.Append( "Changed", (uint64)aButtonsPB.buttonstate2());
+				aConcatBuffer3.Append( "Of scroll", (uint64)aButtonsPB.buttonstate3());
 			}
 
 			if(pBaseUserCmd->has_viewangles())
 			{
 				const auto &aViewAnglesPB = pBaseUserCmd->viewangles();
 
-				aConcat2.AppendToBuffer(sBuffer, "View angles", QAngle(aViewAnglesPB.x(), aViewAnglesPB.y(), aViewAnglesPB.z()));
+				aConcatBuffer2.Append( "View angles", QAngle(aViewAnglesPB.x(), aViewAnglesPB.y(), aViewAnglesPB.z()));
 			}
 
-			aConcat2.AppendToBuffer(sBuffer, "Forward move", pBaseUserCmd->forwardmove());
-			aConcat2.AppendToBuffer(sBuffer, "Left move", pBaseUserCmd->leftmove());
-			aConcat2.AppendToBuffer(sBuffer, "Up move", pBaseUserCmd->upmove());
-			aConcat2.AppendToBuffer(sBuffer, "Impulse", pBaseUserCmd->impulse());
-			aConcat2.AppendToBuffer(sBuffer, "Weapon select", pBaseUserCmd->weaponselect());
-			aConcat2.AppendToBuffer(sBuffer, "Random seed", pBaseUserCmd->random_seed());
-			aConcat2.AppendToBuffer(sBuffer, "Mouse X", pBaseUserCmd->mousedx());
-			aConcat2.AppendToBuffer(sBuffer, "Mouse Y", pBaseUserCmd->mousedy());
-			aConcat2.AppendHandleToBuffer(sBuffer, "Pawn entity handle", pBaseUserCmd->pawn_entity_handle());
+			aConcatBuffer2.Append( "Forward move", pBaseUserCmd->forwardmove());
+			aConcatBuffer2.Append( "Left move", pBaseUserCmd->leftmove());
+			aConcatBuffer2.Append( "Up move", pBaseUserCmd->upmove());
+			aConcatBuffer2.Append( "Impulse", pBaseUserCmd->impulse());
+			aConcatBuffer2.Append( "Weapon select", pBaseUserCmd->weaponselect());
+			aConcatBuffer2.Append( "Random seed", pBaseUserCmd->random_seed());
+			aConcatBuffer2.Append( "Mouse X", pBaseUserCmd->mousedx());
+			aConcatBuffer2.Append( "Mouse Y", pBaseUserCmd->mousedy());
+			aConcatBuffer2.Append( "Pawn entity handle", pBaseUserCmd->pawn_entity_handle());
 
 			const auto &aSubtickMoves = pBaseUserCmd->subtick_moves();
 			
 			if(aSubtickMoves.size())
 			{
-				aConcat2.AppendToBuffer(sBuffer, "Subtick moves");
+				aConcatBuffer2.Append( "Subtick moves");
 			}
 
 			// Subtick data.
+			CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
 			for(const auto &aSubtickMove : aSubtickMoves)
 			{
-				aConcat3.AppendToBuffer(sBuffer, "Button", (uint64)aSubtickMove.button());
-				aConcat3.AppendToBuffer(sBuffer, "Pressed", aSubtickMove.pressed());
-				aConcat3.AppendToBuffer(sBuffer, "When", aSubtickMove.when());
-				aConcat3.AppendToBuffer(sBuffer, "Analog forward delta", aSubtickMove.analog_forward_delta());
-				aConcat3.AppendToBuffer(sBuffer, "Analog left delta", aSubtickMove.analog_left_delta());
+				aConcatBuffer3.Append( "Button", (uint64)aSubtickMove.button());
+				aConcatBuffer3.Append( "Pressed", aSubtickMove.pressed());
+				aConcatBuffer3.Append( "When", aSubtickMove.when());
+				aConcatBuffer3.Append( "Analog forward delta", aSubtickMove.analog_forward_delta());
+				aConcatBuffer3.Append( "Analog left delta", aSubtickMove.analog_left_delta());
 			}
 
 			const auto &aMoveCRC = pBaseUserCmd->move_crc();
 
-			aConcat2.AppendBytesToBuffer(sBuffer, "Move CRC", (const byte *)aMoveCRC.data(), aMoveCRC.size());
-			aConcat2.AppendToBuffer(sBuffer, "Consumed Server Angle Changes", pBaseUserCmd->consumed_server_angle_changes());
-			aConcat2.AppendToBuffer(sBuffer, "Flags", pBaseUserCmd->cmd_flags());
+			aConcatBuffer2.AppendBytes( "Move CRC", (const byte *)aMoveCRC.data(), aMoveCRC.size());
+			aConcatBuffer2.Append( "Consumed Server Angle Changes", pBaseUserCmd->consumed_server_angle_changes());
+			aConcatBuffer2.Append( "Flags", pBaseUserCmd->cmd_flags());
 		}
 
 		{
-			aConcat.AppendToBuffer(sBuffer, "Input history");
+			aConcatBuffer.Append( "Input history");
 
 			const auto &aInputHistory = pMessage->input_history();
 
+			CConcatLineBuffer aConcatBuffer2(&aConcat2, &sBuffer);
 			for(const auto &aInput : aInputHistory)
 			{
 				if(aInput.has_view_angles())
 				{
 					const auto &aViewAnglesPB = aInput.view_angles();
 
-					aConcat2.AppendToBuffer(sBuffer, "View angles", QAngle(aViewAnglesPB.x(), aViewAnglesPB.y(), aViewAnglesPB.z()));
+					aConcatBuffer2.Append( "View angles", QAngle(aViewAnglesPB.x(), aViewAnglesPB.y(), aViewAnglesPB.z()));
 				}
 
-				aConcat2.AppendToBuffer(sBuffer, "Render tick count", aInput.render_tick_count());
-				aConcat2.AppendToBuffer(sBuffer, "Render tick fraction", aInput.render_tick_fraction());
-				aConcat2.AppendToBuffer(sBuffer, "Player tick count", aInput.player_tick_count());
-				aConcat2.AppendToBuffer(sBuffer, "Player tick fraction", aInput.player_tick_fraction());
+				aConcatBuffer2.Append( "Render tick count", aInput.render_tick_count());
+				aConcatBuffer2.Append( "Render tick fraction", aInput.render_tick_fraction());
+				aConcatBuffer2.Append( "Player tick count", aInput.player_tick_count());
+				aConcatBuffer2.Append( "Player tick fraction", aInput.player_tick_fraction());
 
 				if(aInput.has_cl_interp())
 				{
-					aConcat2.AppendToBuffer(sBuffer, "CL interpolation");
+					aConcatBuffer2.Append( "CL interpolation");
 
 					const auto &aCLInterp = aInput.cl_interp();
 
-					aConcat3.AppendToBuffer(sBuffer, "Fraction", aCLInterp.frac());
+					CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+					aConcatBuffer3.Append( "Fraction", aCLInterp.frac());
 				}
 
 				if(aInput.has_sv_interp0())
 				{
-					aConcat2.AppendToBuffer(sBuffer, "Server interpolation");
+					aConcatBuffer2.Append( "Server interpolation");
 
 					const auto &aSVInterpolation0 = aInput.sv_interp0();
 
-					aConcat3.AppendToBuffer(sBuffer, "Source tick", aSVInterpolation0.src_tick());
-					aConcat3.AppendToBuffer(sBuffer, "Destination tick", aSVInterpolation0.dst_tick());
-					aConcat3.AppendToBuffer(sBuffer, "Fraction", aSVInterpolation0.frac());
+					CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+					aConcatBuffer3.Append( "Source tick", aSVInterpolation0.src_tick());
+					aConcatBuffer3.Append( "Destination tick", aSVInterpolation0.dst_tick());
+					aConcatBuffer3.Append( "Fraction", aSVInterpolation0.frac());
 				}
 
 				if(aInput.has_sv_interp1())
 				{
-					aConcat2.AppendToBuffer(sBuffer, "Server interpolation (2)");
+					aConcatBuffer2.Append( "Server interpolation (2)");
 
 					const auto &aSVInterpolation1 = aInput.sv_interp1();
 
-					aConcat3.AppendToBuffer(sBuffer, "Source tick", aSVInterpolation1.src_tick());
-					aConcat3.AppendToBuffer(sBuffer, "Destination tick", aSVInterpolation1.dst_tick());
-					aConcat3.AppendToBuffer(sBuffer, "Fraction", aSVInterpolation1.frac());
+					CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+					aConcatBuffer3.Append( "Source tick", aSVInterpolation1.src_tick());
+					aConcatBuffer3.Append( "Destination tick", aSVInterpolation1.dst_tick());
+					aConcatBuffer3.Append( "Fraction", aSVInterpolation1.frac());
 				}
 
 				if(aInput.has_player_interp())
 				{
-					aConcat2.AppendToBuffer(sBuffer, "Player interpolation");
+					aConcatBuffer2.Append( "Player interpolation");
 
 					const auto &aPlayerInterpolation = aInput.player_interp();
 
-					aConcat3.AppendToBuffer(sBuffer, "Source tick", aPlayerInterpolation.src_tick());
-					aConcat3.AppendToBuffer(sBuffer, "Destination tick", aPlayerInterpolation.dst_tick());
-					aConcat3.AppendToBuffer(sBuffer, "Fraction", aPlayerInterpolation.frac());
+					CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+					aConcatBuffer3.Append( "Source tick", aPlayerInterpolation.src_tick());
+					aConcatBuffer3.Append( "Destination tick", aPlayerInterpolation.dst_tick());
+					aConcatBuffer3.Append( "Fraction", aPlayerInterpolation.frac());
 				}
 
-				aConcat2.AppendToBuffer(sBuffer, "Frame number", aInput.frame_number());
-				aConcat2.AppendToBuffer(sBuffer, "Target entity index", aInput.target_ent_index());
+				aConcatBuffer2.Append( "Frame number", aInput.frame_number());
+				aConcatBuffer2.Append( "Target entity index", aInput.target_ent_index());
 
 				if(aInput.has_shoot_position())
 				{
 					const auto &aVectorPB = aInput.shoot_position();
 
-					aConcat2.AppendToBuffer(sBuffer, "Shot position", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
+					aConcatBuffer2.Append( "Shot position", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
 				}
 
 				if(aInput.has_target_head_pos_check())
 				{
 					const auto &aVectorPB = aInput.target_head_pos_check();
 
-					aConcat2.AppendToBuffer(sBuffer, "Target head position check", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
+					aConcatBuffer2.Append( "Target head position check", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
 				}
 
 				if(aInput.has_target_abs_pos_check())
 				{
 					const auto &aVectorPB = aInput.target_abs_pos_check();
 
-					aConcat2.AppendToBuffer(sBuffer, "Target abs position check", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
+					aConcatBuffer2.Append( "Target abs position check", Vector(aVectorPB.x(), aVectorPB.y(), aVectorPB.z()));
 				}
 
 				if(aInput.has_target_abs_ang_check())
 				{
 					const auto &aAnglesPB = aInput.target_abs_ang_check();
 
-					aConcat2.AppendToBuffer(sBuffer, "Target abs angles check", QAngle(aAnglesPB.x(), aAnglesPB.y(), aAnglesPB.z()));
+					aConcatBuffer2.Append( "Target abs angles check", QAngle(aAnglesPB.x(), aAnglesPB.y(), aAnglesPB.z()));
 				}
 			}
 		}
 
 		{
-			aConcat.AppendToBuffer(sBuffer, "Start History index attack", pMessage->attack1_start_history_index());
-			aConcat.AppendToBuffer(sBuffer, "Start History index attack (2)", pMessage->attack2_start_history_index());
-			aConcat.AppendToBuffer(sBuffer, "Start History index attack (3)", pMessage->attack3_start_history_index());
+			aConcatBuffer.Append( "Start History index attack", pMessage->attack1_start_history_index());
+			aConcatBuffer.Append( "Start History index attack (2)", pMessage->attack2_start_history_index());
+			aConcatBuffer.Append( "Start History index attack (3)", pMessage->attack3_start_history_index());
 		}
 
-		aConcat.AppendToBuffer(sBuffer, "Left hand desired", pMessage->left_hand_desired());
+		aConcatBuffer.Append( "Left hand desired", pMessage->left_hand_desired());
 
 		{
-			aConcat.AppendToBuffer(sBuffer, "Is predicting body shot FX", pMessage->is_predicting_body_shot_fx());
-			aConcat.AppendToBuffer(sBuffer, "Is predicting head shot FX", pMessage->is_predicting_head_shot_fx());
-			aConcat.AppendToBuffer(sBuffer, "Is predicting kill ragdolls", pMessage->is_predicting_kill_ragdolls());
+			aConcatBuffer.Append( "Is predicting body shot FX", pMessage->is_predicting_body_shot_fx());
+			aConcatBuffer.Append( "Is predicting head shot FX", pMessage->is_predicting_head_shot_fx());
+			aConcatBuffer.Append( "Is predicting kill ragdolls", pMessage->is_predicting_kill_ragdolls());
 		}
 
+		aConcatBuffer.AppendEnds();
 		CLogger::Detailed(sBuffer);
 	}
 
@@ -4284,7 +4316,7 @@ CUtlSymbolLarge MenuSystem_Plugin::GetConVarSymbol(const char *pszName)
 
 CUtlSymbolLarge MenuSystem_Plugin::FindConVarSymbol(const char *pszName) const
 {
-	return m_tableConVars.Find(pszName);
+	return m_tableConVars.FindString(pszName);
 }
 
 CUtlSymbolLarge MenuSystem_Plugin::GetLanguageSymbol(const char *pszName)
@@ -4294,5 +4326,5 @@ CUtlSymbolLarge MenuSystem_Plugin::GetLanguageSymbol(const char *pszName)
 
 CUtlSymbolLarge MenuSystem_Plugin::FindLanguageSymbol(const char *pszName) const
 {
-	return m_tableLanguages.Find(pszName);
+	return m_tableLanguages.FindString(pszName);
 }

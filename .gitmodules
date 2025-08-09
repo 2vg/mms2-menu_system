@@ -9,8 +9,8 @@
 	url = https://github.com/alliedmodders/metamod-source.git
 [submodule "Entity Manager"]
 	path = external/entity_manager
-	url = https://github.com/Wend4r/mms2-entity_manager.git
-	branch = v1.0.3
+	url = https://github.com/2vg/mms2-entity_manager.git
+	branch = dev
 	fetchRecurseSubmodules = false
 
 [submodule "Any Config"]
@@ -18,13 +18,16 @@
 	url = https://github.com/Wend4r/s2u-any_config.git
 [submodule "Concat"]
 	path = external/concat
-	url = https://github.com/Wend4r/s2u-concat.git
+	url = https://github.com/2vg/s2u-concat.git
+	branch = dev
 [submodule "GameData"]
 	path = external/gamedata
-	url = https://github.com/Wend4r/s2u-gamedata.git
+	url = https://github.com/2vg/s2u-gamedata.git
+	branch = dev
 [submodule "Logger"]
 	path = external/logger
 	url = https://github.com/Wend4r/s2u-logger.git
 [submodule "Translations"]
 	path = external/translations
-	url = https://github.com/Wend4r/s2u-translations.git
+	url = https://github.com/2vg/s2u-translations.git
+	branch = dev
