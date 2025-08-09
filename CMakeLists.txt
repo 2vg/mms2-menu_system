@@ -94,6 +94,8 @@ set(SOURCE_MENU_SCHEMA_FILES
 	${SOURCE_MENU_SCHEMA_DIR}/player_observerservices.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/player_weaponservices.cpp
 	${SOURCE_MENU_SCHEMA_DIR}/pointworldtext.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/csplayerpawn.cpp
+	${SOURCE_MENU_SCHEMA_DIR}/cpointorient.cpp
 )
 
 set(SOURCE_MENU_FILES
