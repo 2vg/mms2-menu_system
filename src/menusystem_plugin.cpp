@@ -2193,10 +2193,6 @@ bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu
 		CLogger::Detailed(sBuffer);
 	}
 
-	// Use PointOrient position and rotation
-	Vector origin = pOrient->GetAbsOrigin();
-	QAngle orientAngles = pOrient->GetAbsRotation();
-
 	if(CLogger::IsChannelEnabled(LV_DETAILED))
 	{
 		CLogger::DetailedFormat("Player point orient: \"%s\" (%d)\n", pOrient->GetClassname(), pOrient->GetEntityIndex().Get());
@@ -2212,7 +2208,7 @@ bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu
 		aBaseEntity.AcceptInput(pEntity, "SetParent", pOrient, NULL, &aParentVariant, 0);
 	}
 
-	// No need to mark network changed for PointOrient as it's handled automatically
+	// TODO: check need to call network changed or not.
 
 	return true;
 }
