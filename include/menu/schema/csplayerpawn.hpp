@@ -47,6 +47,8 @@ namespace Menu
 			using PointOrientBase = CPointOrient_Helper;
 
 		public:
+			void AddListeners(CSystem *pSchemaSystemHelper);
+			
 			// PointOrient management methods
 			void SetPointOrient(CCSPlayerPawn *pCSPlayerPawn, CPointOrient *pOrient);
 			CPointOrient* GetPointOrient(CCSPlayerPawn *pCSPlayerPawn);

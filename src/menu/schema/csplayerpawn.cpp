@@ -29,6 +29,13 @@
 // Static storage for PointOrient handles per player
 CHandle<CPointOrient> Menu::Schema::CCSPlayerPawn_Helper::s_aPlayerPointOrients[64];
 
+void Menu::Schema::CCSPlayerPawn_Helper::AddListeners(CSystem *pSchemaSystemHelper)
+{
+	// Call both base class AddListeners methods
+	CCSPlayerPawnBase_Helper::AddListeners(pSchemaSystemHelper);
+	CPointOrient_Helper::AddListeners(pSchemaSystemHelper);
+}
+
 void Menu::Schema::CCSPlayerPawn_Helper::SetPointOrient(CCSPlayerPawn *pCSPlayerPawn, CPointOrient *pOrient)
 {
 	if (!pCSPlayerPawn)
