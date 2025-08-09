@@ -34,12 +34,11 @@
 
 const CConcatLineString g_aMenuConcat = ConcatLine_t<const char *>
 {
-	"",     // Heads with.
 	"",     // Starts with.
 	"",     // Before key.
 	". ",   // Between key & value.
 	"\n",   // Ends.
-	"\n\n"  // Ends every title.
+	"\n\n"  // Ends and starts with.
 };
 
 CMenu::CMenu(const CPointWorldText_Helper *pSchemaHelper, const CGameData_BaseEntity *pGameData, IMenuProfile *pProfile, IMenuHandler *pHandler, CMenuData_t::ControlItems_t *pControls)

@@ -1771,9 +1771,10 @@ bool MenuSystem_Plugin::InitEntityManager(char *error, size_t maxlen)
 
 void MenuSystem_Plugin::DumpEntityManager(const CConcatLineString &aConcat, CBufferString &sOutput)
 {
-	GLOBALS_APPEND_VARIABLE(aConcat, m_pEntityManager);
-	GLOBALS_APPEND_VARIABLE(aConcat, m_pEntityManagerProviderAgent);
-	GLOBALS_APPEND_VARIABLE(aConcat, m_pEntityManagerSpawnGroupProvider);
+	CConcatLineBuffer aConcatBuffer(&aConcat, &sOutput);
+	GLOBALS_APPEND_VARIABLE(aConcatBuffer, m_pEntityManager);
+	GLOBALS_APPEND_VARIABLE(aConcatBuffer, m_pEntityManagerProviderAgent);
+	GLOBALS_APPEND_VARIABLE(aConcatBuffer, m_pEntityManagerSpawnGroupProvider);
 }
 
 bool MenuSystem_Plugin::UnloadEntityManager(char *error, size_t maxlen)
@@ -2187,10 +2188,11 @@ bool MenuSystem_Plugin::AttachMenuInstanceToCSPlayer(int i, CMenu *pInternalMenu
 		const auto &aConcat = g_aEmbedConcat;
 
 		CBufferStringN<256> sBuffer;
+		CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
 
-		aConcat.AppendHeadToBuffer(sBuffer, "Menu entities position");
-		aConcat.AppendToBuffer(sBuffer, "Origin", vecMenuAbsOrigin);
-		aConcat.AppendToBuffer(sBuffer, "Rotation", angMenuRotation);
+		aConcatBuffer.Append("Menu entities position");
+		aConcatBuffer.Append("Origin", vecMenuAbsOrigin);
+		aConcatBuffer.Append("Rotation", angMenuRotation);
 
 		CLogger::Detailed(sBuffer);
 	}
@@ -3160,21 +3162,23 @@ void MenuSystem_Plugin::OnDispatchConCommandHook(ConCommandRef hCommand, const C
 						const auto &aConcat = g_aEmbedConcat,
 						           &aConcat2 = g_aEmbed2Concat,
 						           &aConcat3 = g_aEmbed3Concat;
-
+	
 						CBufferStringN<1024> sBuffer;
-
-						aConcat.AppendHeadToBuffer(sBuffer, "Handle a chat command");
-						aConcat.AppendToBuffer(sBuffer, "Player slot", aPlayerSlot.Get());
-						aConcat.AppendToBuffer(sBuffer, "Is silent", bIsSilent);
-						aConcat.AppendToBuffer(sBuffer, "Arguments");
-
+						CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
+						CConcatLineBuffer aConcatBuffer3(&aConcat3, &sBuffer);
+	
+						aConcatBuffer.Append("Handle a chat command");
+						aConcatBuffer.Append("Player slot", aPlayerSlot.Get());
+						aConcatBuffer.Append("Is silent", bIsSilent);
+						aConcatBuffer.Append("Arguments");
+	
 						for(const auto &sArg : vecArgs)
 						{
-							aConcat3.AppendStringHeadToBuffer(sBuffer, sArg.Get());
-
+							aConcatBuffer3.Append<true>(sArg.Get());
+	
 							// ...
 						}
-
+	
 						CLogger::Detailed(sBuffer);
 					}
 
@@ -3219,10 +3223,10 @@ CServerSideClientBase *MenuSystem_Plugin::OnConnectClientHook(const char *pszNam
 	RETURN_META_VALUE(MRES_IGNORED, NULL);
 }
 
-void MenuSystem_Plugin::OnCheckTransmitHook(CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, 
+void MenuSystem_Plugin::OnCheckTransmitHook(CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, CBitVec<MAX_EDICTS> &bvUnknown,
                                             const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits)
 {
-	OnCheckTransmit(META_IFACEPTR(ISource2GameEntities), ppInfoList, nInfoCount, bvUnionTransmitEdicts, pNetworkables, pEntityIndicies, nEntities, bEnablePVSBits);
+	OnCheckTransmit(META_IFACEPTR(ISource2GameEntities), ppInfoList, nInfoCount, bvUnionTransmitEdicts, bvUnknown, pNetworkables, pEntityIndicies, nEntities, bEnablePVSBits);
 
 	RETURN_META(MRES_IGNORED);
 }
