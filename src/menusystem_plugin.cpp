@@ -3270,12 +3270,13 @@ void MenuSystem_Plugin::SendSetConVarMessage(IRecipientFilter *pFilter, CUtlVect
 		const auto &aConcat = g_aEmbedConcat;
 
 		CBufferStringN<1024> sBuffer;
+		CConcatLineBuffer aConcatBuffer(&aConcat, &sBuffer);
 
-		aConcat.AppendHeadToBuffer(sBuffer, pSetConVarMessage->GetUnscopedName());
+		aConcatBuffer.Append(pSetConVarMessage->GetUnscopedName());
 
 		for(const auto &[pszName, pszValue] : vecCvars)
 		{
-			aConcat.AppendKeyStringValueStringToBuffer(sBuffer, pszName, pszValue);
+			aConcatBuffer.Append<true, true>(pszName, pszValue);
 		}
 
 		CLogger::Detailed(sBuffer);
@@ -3615,7 +3616,7 @@ void MenuSystem_Plugin::OnConnectClient(CNetworkGameServerBase *pNetServer, CSer
 	aPlayer.OnConnected(pPlayer);
 }
 
-void MenuSystem_Plugin::OnCheckTransmit(ISource2GameEntities *pGameEntities, CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits)
+void MenuSystem_Plugin::OnCheckTransmit(ISource2GameEntities *pGameEntities, CCheckTransmitInfo **ppInfoList, int nInfoCount, CBitVec<MAX_EDICTS> &bvUnionTransmitEdicts, CBitVec<MAX_EDICTS> &bvUnknown, const Entity2Networkable_t **pNetworkables, const uint16 *pEntityIndicies, int nEntities, bool bEnablePVSBits)
 {
 	// if(CLogger::IsChannelEnabled(LV_DETAILED))
 	// {
