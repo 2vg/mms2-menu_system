@@ -24,8 +24,11 @@
 #include <menu/schema/cpointorient.hpp>
 #include <menu/schema.hpp>
 #include <menu/provider.hpp>
+#include <menusystem_plugin.hpp>
+#include <globals.hpp>
 
 #include <entity2/entitysystem.h>
+#include <entity2/entitykeyvalues.h>
 #include <mathlib/vector.h>
 #include <mathlib/mathlib.h>
 #include <variant.h>
@@ -68,33 +71,54 @@ void Menu::Schema::CCSPlayerPawn_Helper::CreatePointOrient(CCSPlayerPawn *pCSPla
 	CPointOrient* pExistingOrient = GetPointOrient(pCSPlayerPawn);
 	if (pExistingOrient)
 	{
-		pExistingOrient->Remove();
+		// Use entity system to remove entity
+		if (g_pGameEntitySystem)
+		{
+			g_pGameEntitySystem->AddRefEdict(pExistingOrient->GetEdict());
+			g_pGameEntitySystem->RemoveEntity(pExistingOrient);
+		}
 		SetPointOrient(pCSPlayerPawn, nullptr);
 	}
 
-	// Create new PointOrient entity
-	CPointOrient* pOrient = static_cast<CPointOrient*>(CreateEntityByName("point_orient"));
-	if (!pOrient)
+	// Create new PointOrient entity using entity system
+	if (!g_pGameEntitySystem)
 		return;
+
+	CEntityKeyValues* pKeyValues = new CEntityKeyValues();
+	pKeyValues->SetString("classname", "point_orient");
+	
+	CPointOrient* pOrient = static_cast<CPointOrient*>(g_pGameEntitySystem->CreateEntity("point_orient", -1));
+	if (!pOrient)
+	{
+		delete pKeyValues;
+		return;
+	}
 
 	// Configure PointOrient properties
 	CPointOrient_Helper::GetActiveAccessor(pOrient) = true;
 	CPointOrient_Helper::GetGoalDirectionAccessor(pOrient) = PointOrientGoalDirectionType_t::eEyesForward;
 
-	// Spawn the entity
-	pOrient->DispatchSpawn();
+	// Spawn the entity using entity system
+	g_pGameEntitySystem->SpawnEntity(pOrient->GetEntityInstance(), pKeyValues);
 	
 	// Store the PointOrient handle
 	SetPointOrient(pCSPlayerPawn, pOrient);
 
-	// Position the PointOrient at player's eye position
-	Vector vecEyePosition = pCSPlayerPawn->GetEyePosition();
-	pOrient->Teleport(&vecEyePosition, nullptr, nullptr);
+	// Get provider for proper API calls
+	extern MenuSystem_Plugin *g_pMenuPlugin;
+	auto &aBaseEntity = g_pMenuPlugin->GetGameDataStorage().GetBaseEntity();
+	auto &aBasePlayerPawn = g_pMenuPlugin->GetGameDataStorage().GetBasePlayerPawn();
 
-	// Set parent and target to the player
+	// Position the PointOrient at player's eye position
+	Vector vecEyePosition = aBasePlayerPawn.GetEyePosition(pCSPlayerPawn);
+	aBaseEntity.Teleport(pOrient, vecEyePosition);
+
+	// Set parent and target to the player using proper variant_t
 	variant_t activatorVariant;
-	activatorVariant.SetEntity(pCSPlayerPawn);
+	CEntityHandle playerHandle;
+	playerHandle.Set(pCSPlayerPawn);
+	activatorVariant = playerHandle;
 	
-	pOrient->AcceptInput("SetParent", "!activator", pCSPlayerPawn, &activatorVariant, 0);
-	pOrient->AcceptInput("SetTarget", "!activator", pCSPlayerPawn, &activatorVariant, 0);
+	aBaseEntity.AcceptInput(pOrient, "SetParent", pCSPlayerPawn, pCSPlayerPawn, &activatorVariant, 0);
+	aBaseEntity.AcceptInput(pOrient, "SetTarget", pCSPlayerPawn, pCSPlayerPawn, &activatorVariant, 0);
 }
